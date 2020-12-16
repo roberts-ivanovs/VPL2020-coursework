@@ -43,8 +43,7 @@ namespace coursework
         /* Game defining state */
         private SimulationState SimState = SimulationState.PAUSED;
 
-
-        World(uint initialPopulation, uint initialSick, short timeScale)
+        public World(uint initialPopulation, uint initialSick, float timeScale)
         {
             this.initialPopulation = initialPopulation;
             this.initialSick = initialSick;
