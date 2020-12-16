@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace coursework
+namespace DiseaseCore
 {
     class SickEntity : HealthyEntity
     {
@@ -10,7 +10,7 @@ namespace coursework
         public SickEntity()
         {
         }
-        override public void Tick(uint milliseconds)
+        override public void Tick(ulong milliseconds)
         {
             base.Tick(milliseconds);
             recovery *= recoveryRatePerSecond * milliseconds / 1000;

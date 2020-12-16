@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace coursework
+namespace DiseaseCore
 {
     internal enum SimulationState
     {
@@ -67,6 +67,7 @@ namespace coursework
             /* Create different entity managers */
             Task[] TaskPool = new Task[NumberOfCores];
             var set_size = population.Count / NumberOfCores;
+
             for (int i = 0; i < NumberOfCores; i++)
             {
                 int procIndex = i;

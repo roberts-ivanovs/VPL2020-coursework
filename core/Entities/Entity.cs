@@ -1,7 +1,7 @@
 using System;
 using System.Numerics;
 
-namespace coursework
+namespace DiseaseCore
 {
     abstract class AbstractEntity
     {
