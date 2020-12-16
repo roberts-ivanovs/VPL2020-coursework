@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace coursework
 {
-
-    internal enum SimulationState {
+    internal enum SimulationState
+    {
         PAUSED,
         RUNNING,
         SYNCYNG
     }
 
-    class World
+    public class World
     {
         /* Static initializers */
         private static Random rnd = new Random();
@@ -29,13 +29,13 @@ namespace coursework
         /* Non defining game state values */
         private uint initialPopulation { get; }
         private uint initialSick { get; }
-        private short timeScale { get; set; }
+        private float timeScale { get; set; }
         static int NumberOfCores = Environment.ProcessorCount;
 
 
         /* Live population accessors  */
         private Mutex populationAccess = new Mutex();
-        private List<Tuple<Point, AbstractEntity>> population { get; set; }
+        private List<Tuple<Point, AbstractEntity>> population = new List<Tuple<Point, AbstractEntity>>();
 
         /* Multiple threads */
         private Task[] TaskPool;
