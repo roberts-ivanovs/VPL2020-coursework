@@ -78,9 +78,12 @@ namespace coursework
                     var sw = new Stopwatch();
                     sw.Start();
                     var previous = 0L;
-                    while (true) {
-                        while (SimState == SimulationState.RUNNING) {
+                    while (true)
+                    {
+                        while (SimState == SimulationState.RUNNING)
+                        {
                             var current = sw.ElapsedMilliseconds;
+                            SimulateSubset(manageable, (ulong)((current - previous) * timeScale) );
                             SyncResource(skip, set_size, manageable);
                             previous = current;
                         }
@@ -90,7 +93,8 @@ namespace coursework
             }
         }
 
-        private void SimulateSubset(List<Tuple<Point, AbstractEntity>> subset, ulong timeDeltaMs) {
+        private void SimulateSubset(List<Tuple<Point, AbstractEntity>> subset, ulong timeDeltaMs)
+        {
             foreach (var item in subset)
             {
                 item.Item2.Tick(timeDeltaMs);
