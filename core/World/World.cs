@@ -81,7 +81,7 @@ namespace coursework
                     while (true) {
                         while (SimState == SimulationState.RUNNING) {
                             var current = sw.ElapsedMilliseconds;
-                            SimulateSubset(manageable, (ulong) (current - previous));
+                            SyncResource(skip, set_size, manageable);
                             previous = current;
                         }
                         Thread.Sleep(100);
@@ -97,6 +97,26 @@ namespace coursework
             }
         }
 
+        private void SyncResource(int skip, int set_size, List<Tuple<Point, AbstractEntity>> subset)
+        {
+            if (populationAccess.WaitOne(1000))
+            {
+                Console.WriteLine("Access IS acquired by thread.");
+                // Simulate some work.
+                // Thread.Sleep(50);
+                // population.Repl
+                // Release the Mutex.
+                populationAccess.ReleaseMutex();
+            }
+            else
+            {
+                Console.WriteLine("Access NOT acquired by thread.");
+            }
+        }
+
+        public void Start() {
+            SimState = SimulationState.RUNNING;
+        }
 
     }
 }
