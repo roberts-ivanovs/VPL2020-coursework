@@ -11,7 +11,7 @@ namespace coursework
         {
             direction = new Vector3(0, 0, 0);
         }
-        public virtual void Tick(uint milliseconds)
+        public virtual void Tick(ulong milliseconds)
         {
             // TODO Update direction (or dont)
         }
