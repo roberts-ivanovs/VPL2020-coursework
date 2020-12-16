@@ -53,14 +53,14 @@ namespace coursework
             // Populate the initially healthy `population`
             for (uint _ = 0; _ < initialPopulation; _++)
             {
-                var p = new Point(rnd.Next(maxX, minX), rnd.Next(maxY, minY));
+                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
                 var entity = new HealthyEntity();
                 population.Add(new Tuple<Point, AbstractEntity>(p, entity));
             }
             // Populate the initially sick `population`
             for (uint _ = 0; _ < initialSick; _++)
             {
-                var p = new Point(rnd.Next(maxX, minX), rnd.Next(maxY, minY));
+                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
                 var entity = new SickEntity();
                 population.Add(new Tuple<Point, AbstractEntity>(p, entity));
             }
