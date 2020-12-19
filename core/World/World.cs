@@ -15,16 +15,33 @@ namespace DiseaseCore
         SYNCYNG
     }
 
+    internal class EntityOnMap
+    {
+        public ulong ID { get; }
+        public static ulong IDCounter = 0;
+        public Point location;
+        public AbstractEntity entity;
+
+        public EntityOnMap(Point location, AbstractEntity entity)
+        {
+            IDCounter += 1;
+            ID = IDCounter;
+
+            this.location = location;
+            this.entity = entity;
+        }
+    }
+
     public class World
     {
         /* Static initializers */
         private static Random rnd = new Random();
 
         /* Map bounds */
-        private static int maxX = 100;
-        private static int maxY = 100;
-        private static int minX = -100;
-        private static int minY = -100;
+        private static int maxX = 1000;
+        private static int maxY = 1000;
+        private static int minX = -1000;
+        private static int minY = -1000;
 
         /* Non defining game state values */
         private uint initialPopulation { get; }
@@ -35,7 +52,7 @@ namespace DiseaseCore
 
         /* Live population accessors  */
         private Mutex populationAccess = new Mutex();
-        private List<Tuple<Point, AbstractEntity>> population = new List<Tuple<Point, AbstractEntity>>();
+        private List<EntityOnMap> population = new List<EntityOnMap>();
 
         /* Multiple threads */
         private Task[] TaskPool;
@@ -53,15 +70,15 @@ namespace DiseaseCore
             for (uint _ = 0; _ < initialPopulation; _++)
             {
                 var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                var entity = new HealthyEntity();
-                population.Add(new Tuple<Point, AbstractEntity>(p, entity));
+                var entity_constructed = new HealthyEntity();
+                population.Add(new EntityOnMap(p, entity_constructed));
             }
             // Populate the initially sick `population`
             for (uint _ = 0; _ < initialSick; _++)
             {
                 var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                var entity = new SickEntity();
-                population.Add(new Tuple<Point, AbstractEntity>(p, entity));
+                var entity_constructed = new SickEntity();
+                population.Add(new EntityOnMap(p, entity_constructed));
             }
 
             /* Create different entity managers */
@@ -83,7 +100,7 @@ namespace DiseaseCore
                         while (SimState == SimulationState.RUNNING)
                         {
                             var current = sw.ElapsedMilliseconds;
-                            SimulateSubset(manageable, (ulong)((current - previous) * timeScale) );
+                            SimulateSubset(manageable, (ulong)((current - previous) * timeScale));
                             SyncResource(skip, set_size, manageable);
                             previous = current;
                         }
@@ -93,22 +110,28 @@ namespace DiseaseCore
             }
         }
 
-        private void SimulateSubset(List<Tuple<Point, AbstractEntity>> subset, ulong timeDeltaMs)
+        private void SimulateSubset(List<EntityOnMap> subset, ulong timeDeltaMs)
         {
             foreach (var item in subset)
             {
-                item.Item2.Tick(timeDeltaMs);
+                item.entity.Tick(timeDeltaMs);
+                var scaled = item.entity.direction *= timeDeltaMs / 1000;
+                // item.location.X = new Point(1, 1);
+                item.location.X = (int)scaled.X;
+                item.location.X = (int)scaled.Y;
+
+                // Calculate new position
+                // Update new position
             }
         }
 
-        private void SyncResource(int skip, int set_size, List<Tuple<Point, AbstractEntity>> subset)
+        private void SyncResource(int skip, int set_size, List<EntityOnMap> subset)
         {
             if (populationAccess.WaitOne(1000))
             {
                 Console.WriteLine("Access IS acquired by thread.");
                 // Simulate some work.
                 // Thread.Sleep(50);
-                // population.Repl
                 // Release the Mutex.
                 populationAccess.ReleaseMutex();
             }
@@ -118,7 +141,8 @@ namespace DiseaseCore
             }
         }
 
-        public void Start() {
+        public void Start()
+        {
             SimState = SimulationState.RUNNING;
         }
 
