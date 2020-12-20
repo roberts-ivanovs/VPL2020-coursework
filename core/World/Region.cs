@@ -11,19 +11,21 @@ namespace DiseaseCore
         private List<EntityOnMap> population = new List<EntityOnMap>();
         public Mutex inboundAccess = new Mutex();
         public List<EntityOnMap> inbound = new List<EntityOnMap>();
-        public SimulationState SimState { get; set; }
+
         private Func<EntityOnMap, bool> entityMustLeave;
         private Func<List<EntityOnMap>, bool> upperPassEntities;
 
+        /* Game defining state */
+        public SimulationState SimState { get; set; }
+
         public Region(
             List<EntityOnMap> population,
-            SimulationState SimState,
             Func<EntityOnMap, bool> entityMustLeave,
             Func<List<EntityOnMap>, bool> upperPassEntities
         )
         {
+            this.SimState = SimulationState.PAUSED;
             this.population = population;
-            this.SimState = SimState;
             this.entityMustLeave = entityMustLeave;
             this.upperPassEntities = upperPassEntities;
         }
@@ -40,6 +42,8 @@ namespace DiseaseCore
                 population = population
                     .Select(x => SimulateSubset(ref x, timeDeltaMS))
                     .ToList();
+                // TODO: Make entities sick if they need to
+
 
                 // Perform entity removal that have left the region
                 var toRemove = population.Where(x => !entityMustLeave(x)).ToList();
@@ -60,12 +64,24 @@ namespace DiseaseCore
             }
         }
 
-        private ref EntityOnMap SimulateSubset(ref EntityOnMap item, ulong timeDeltaMs)
+
+
+        private static ref EntityOnMap SimulateSubset(ref EntityOnMap item, ulong timeDeltaMs)
         {
             item.entity.Tick(timeDeltaMs);
             var scaled = item.entity.direction *= timeDeltaMs / 1000;
             item.location.X += (int)scaled.X;
-            item.location.X += (int)scaled.Y;
+
+            // Perform Y axis wrapping
+            if ((uint)scaled.Y > World.maxY)
+            {
+                scaled.Y = World.minY;
+            }
+            else if ((uint)scaled.Y < World.minY)
+            {
+                scaled.Y = World.maxY;
+            }
+            item.location.Y += (int)scaled.Y;
             return ref item;
         }
     }
