@@ -56,22 +56,26 @@ namespace DiseaseCore
                         population = population.Where(x => !toRemove.Contains(x)).ToList();
                     };
 
-                    // Perform entity addition that have entered the region
-                    if (inbound.Count() > 0 && inboundAccess.WaitOne())
-                    {
-                        Console.WriteLine($"Region: inbound {inbound.Count()} | population {population.Count()}");
-                        population.AddRange(inbound);
-                        inbound.Clear();
-                        inboundAccess.ReleaseMutex();
-                    }
+                    ReadFromInbound();
                     previous = current; // Stopwatch update
                     populationAccess.ReleaseMutex();
                 }
                 else
                 {
-                        // Console.WriteLine($"Region: inbound {inbound.Count()}");
+                    // Console.WriteLine($"Region: inbound {inbound.Count()}");
                     Console.WriteLine($"Region couldnt access its own population");
                 }
+            }
+        }
+
+        private void ReadFromInbound()
+        {
+            // Perform entity addition that have entered the region
+            if (inbound.Count() > 0 && inboundAccess.WaitOne())
+            {
+                population.AddRange(inbound);
+                inbound.Clear();
+                inboundAccess.ReleaseMutex();
             }
         }
 
@@ -97,6 +101,7 @@ namespace DiseaseCore
         public List<EntityOnMap> getEntities()
         {
             populationAccess.WaitOne();
+            ReadFromInbound();
             var res = population;
             populationAccess.ReleaseMutex();
             return res;
