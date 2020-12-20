@@ -27,7 +27,7 @@ namespace DiseaseCore
         internal readonly static int minY = -1000;
 
         /* Non defining game state values */
-        private uint initialPopulation { get; }
+        private uint initialHealthy { get; }
         private uint initialSick { get; }
         private float timeScale { get; set; }
         static int NumberOfCores = Environment.ProcessorCount;
@@ -44,9 +44,9 @@ namespace DiseaseCore
 
         SimulationState SimState;
 
-        public World(uint initialPopulation, uint initialSick, float timeScale)
+        public World(uint initialHealthy, uint initialSick, float timeScale)
         {
-            this.initialPopulation = initialPopulation;
+            this.initialHealthy = initialHealthy;
             this.initialSick = initialSick;
             this.timeScale = timeScale;
             this.SimState = SimulationState.PAUSED;
@@ -56,7 +56,8 @@ namespace DiseaseCore
             int deltaX = maxX / NumberOfCores;
             List<EntityOnMap> population = new List<EntityOnMap>();
             // Populate the initially healthy population
-            for (uint _ = 0; _ < initialPopulation - initialSick; _++)
+            outOfBoundsLock.WaitOne();
+            for (uint _ = 0; _ < initialHealthy; _++)
             {
                 var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
                 var entity_constructed = new HealthyEntity();
@@ -69,6 +70,7 @@ namespace DiseaseCore
                 var entity_constructed = new SickEntity();
                 outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
             }
+            outOfBoundsLock.ReleaseMutex();
             for (int i = 0; i < NumberOfCores; i++)
             {
                 int localMaxX = i * deltaX + deltaX;
@@ -122,7 +124,8 @@ namespace DiseaseCore
                 int deltaX = maxX / NumberOfCores;
                 while (this.SimState == SimulationState.RUNNING)
                 {
-                    if (outOfBoundsLock.WaitOne(100))
+                    Console.WriteLine($"outOfBoundsPopulation {outOfBoundsPopulation.Count()}");
+                    if (outOfBoundsLock.WaitOne())
                     {
                         // Initiate placeholder inbound values for each thread
                         List<EntityOnMap>[] inbound = new List<EntityOnMap>[regionManagers.Length];
@@ -146,16 +149,18 @@ namespace DiseaseCore
                             {
                                 index = regionManagers.Length - 1;
                             }
-                            inbound[index].Append(item);
+                            inbound[index].Add(item);
                         }
 
                         outOfBoundsPopulation.Clear();
                         // Place each item in its appropriate thread
                         for (int i = 0; i < regionManagers.Length; ++i)
                         {
-                            if (regionManagers[i].inboundAccess.WaitOne(100))
+                            if (inbound[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne(10))
                             {
+                                Console.WriteLine($"Region manager recieves {inbound[i].Count()} entities");
                                 regionManagers[i].inbound.AddRange(inbound[i]);
+                                regionManagers[i].inboundAccess.ReleaseMutex();
                             }
                             else
                             {
@@ -165,10 +170,6 @@ namespace DiseaseCore
                         }
                         outOfBoundsLock.ReleaseMutex();
                     }
-
-                    // Give time for other threads to populate the `outOfBoundsPopulation`
-                    Thread.Sleep(100);
-
                 }
             });
             syncTask.Start();
@@ -185,6 +186,29 @@ namespace DiseaseCore
             Task.WaitAll(tasks); // Wait for all refion tasks to finish
             syncTask.Wait();
             syncTask.Dispose(); // Clear SyncTask
+        }
+
+        public List<EntityOnMap> GetCurrentState()
+        {
+            // Asynchronously extract the current state from each running task
+            Task[] waitingData = new Task[regionManagers.Length];
+            List<EntityOnMap>[] population = new List<EntityOnMap>[regionManagers.Length];
+            for (int i = 0; i < regionManagers.Length; ++i)
+            {
+                int procIndex = i;
+                waitingData[procIndex] = new Task(() =>
+                {
+                    var item = regionManagers[procIndex].getEntities();
+                    Console.WriteLine($"Getting entities {item.Count()}");
+                    population[procIndex] = item;
+                });
+                waitingData[procIndex].Start();
+            }
+            Task.WaitAll(waitingData);
+            return population.Aggregate(
+                new List<EntityOnMap>(),
+                (current, next) => { current.AddRange(next); return current; }
+            ).ToList();
         }
     }
 }

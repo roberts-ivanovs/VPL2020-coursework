@@ -8,7 +8,9 @@ namespace DiseaseCore
 {
     internal class Region
     {
+        private Mutex populationAccess = new Mutex();
         private List<EntityOnMap> population = new List<EntityOnMap>();
+
         public Mutex inboundAccess = new Mutex();
         public List<EntityOnMap> inbound = new List<EntityOnMap>();
 
@@ -37,34 +39,41 @@ namespace DiseaseCore
             var previous = 0L;
             while (SimState == SimulationState.RUNNING)
             {
-                var current = sw.ElapsedMilliseconds;
-                var timeDeltaMS = (ulong)((current - previous) * timeScale);
-                population = population
-                    .Select(x => SimulateSubset(ref x, timeDeltaMS))
-                    .ToList();
-                // TODO: Make entities sick if they need to
-
-
-                // Perform entity removal that have left the region
-                var toRemove = population.Where(x => !entityMustLeave(x)).ToList();
-                if (upperPassEntities(toRemove))
+                if (populationAccess.WaitOne())
                 {
-                    population = population.Where(x => !toRemove.Contains(x)).ToList();
-                };
+                    var current = sw.ElapsedMilliseconds;
+                    var timeDeltaMS = (ulong)((current - previous) * timeScale);
+                    population = population
+                        .Select(x => SimulateSubset(ref x, timeDeltaMS))
+                        .ToList();
+                    // TODO: Make entities sick if they need to
 
-                // Perform entity addition that have entered the region
-                if (inboundAccess.WaitOne(100))
-                {
-                    population.AddRange(inbound);
-                    inbound.Clear();
-                    inboundAccess.ReleaseMutex();
+
+                    // Perform entity removal that have left the region
+                    var toRemove = population.Where(x => !entityMustLeave(x)).ToList();
+                    if (upperPassEntities(toRemove))
+                    {
+                        population = population.Where(x => !toRemove.Contains(x)).ToList();
+                    };
+
+                    // Perform entity addition that have entered the region
+                    if (inbound.Count() > 0 && inboundAccess.WaitOne())
+                    {
+                        Console.WriteLine($"Region: inbound {inbound.Count()} | population {population.Count()}");
+                        population.AddRange(inbound);
+                        inbound.Clear();
+                        inboundAccess.ReleaseMutex();
+                    }
+                    previous = current; // Stopwatch update
+                    populationAccess.ReleaseMutex();
                 }
-                previous = current; // Stopwatch update
-
+                else
+                {
+                        // Console.WriteLine($"Region: inbound {inbound.Count()}");
+                    Console.WriteLine($"Region couldnt access its own population");
+                }
             }
         }
-
-
 
         private static ref EntityOnMap SimulateSubset(ref EntityOnMap item, ulong timeDeltaMs)
         {
@@ -83,6 +92,14 @@ namespace DiseaseCore
             }
             item.location.Y += (int)scaled.Y;
             return ref item;
+        }
+
+        public List<EntityOnMap> getEntities()
+        {
+            populationAccess.WaitOne();
+            var res = population;
+            populationAccess.ReleaseMutex();
+            return res;
         }
     }
 }
