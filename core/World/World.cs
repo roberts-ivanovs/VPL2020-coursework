@@ -108,10 +108,10 @@ namespace DiseaseCore
             for (int i = 0; i < regionManagers.Length; ++i)
             {
                 int procIndex = i;
+                var item = regionManagers[procIndex];
+                item.SimState = SimulationState.RUNNING;
                 tasks[procIndex] = new Task(() =>
                 {
-                    var item = regionManagers[procIndex];
-                    item.SimState = SimulationState.RUNNING;
                     item.StartLooping(this.timeScale);
                 });
                 tasks[i].Start();
@@ -120,16 +120,13 @@ namespace DiseaseCore
             // Spawn a task to sync the out-of-bounds population
             syncTask = new Task(() =>
             {
-                while (this.SimState != SimulationState.DEAD)
+                while (this.SimState == SimulationState.RUNNING)
                 {
-                    if (this.SimState != SimulationState.PAUSED)
-                    {
-                        SyncTaskCode();
-                    }
+                    SyncTaskCode();
                 }
             });
-            syncTask.Start();
             this.SimState = SimulationState.RUNNING;
+            syncTask.Start();
         }
 
         public void Stop()
@@ -231,6 +228,7 @@ namespace DiseaseCore
                 }
                 outOfBoundsLock.ReleaseMutex();
             }
+            Console.WriteLine("outOfBoundsLock received");
         }
     }
 }

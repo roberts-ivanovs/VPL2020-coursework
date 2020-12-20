@@ -70,6 +70,7 @@ namespace DiseaseCore
         private void ReadFromInbound()
         {
             // Perform entity addition that have entered the region
+            Console.WriteLine($"inbound {inbound.Count()}");
             if (inbound.Count() > 0 && inboundAccess.WaitOne())
             {
                 population.AddRange(inbound);
