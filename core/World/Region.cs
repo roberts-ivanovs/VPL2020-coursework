@@ -62,7 +62,6 @@ namespace DiseaseCore
                 }
                 else
                 {
-                    // Console.WriteLine($"Region: inbound {inbound.Count()}");
                     Console.WriteLine($"Region couldnt access its own population");
                 }
             }
@@ -100,10 +99,12 @@ namespace DiseaseCore
 
         public List<EntityOnMap> getEntities()
         {
+            SimState = SimulationState.PAUSED;
             populationAccess.WaitOne();
             ReadFromInbound();
             var res = population;
             populationAccess.ReleaseMutex();
+            SimState = SimulationState.RUNNING;
             return res;
         }
     }
