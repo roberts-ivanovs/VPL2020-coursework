@@ -34,11 +34,12 @@ namespace DiseaseCore
 
 
         /* Live population accessors  */
-        private Mutex populationAccess = new Mutex();
-        private List<EntityOnMap> population = new List<EntityOnMap>();
+        private Mutex outOfBoundsLock = new Mutex();
+        private List<EntityOnMap> outOfBoundsPopulation = new List<EntityOnMap>();
 
         /* Multiple threads */
-        private Task[] TaskPool;
+        Region[] regionManagers;
+        Task[] tasks;
 
         /* Game defining state */
         private SimulationState SimState = SimulationState.PAUSED;
@@ -49,85 +50,68 @@ namespace DiseaseCore
             this.initialSick = initialSick;
             this.timeScale = timeScale;
 
-            // Populate the initially healthy `population`
-            for (uint _ = 0; _ < initialPopulation; _++)
-            {
-                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                var entity_constructed = new HealthyEntity();
-                population.Add(new EntityOnMap(p, entity_constructed));
-            }
-            // Populate the initially sick `population`
-            for (uint _ = 0; _ < initialSick; _++)
-            {
-                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                var entity_constructed = new SickEntity();
-                population.Add(new EntityOnMap(p, entity_constructed));
-            }
-
             /* Create different entity managers */
-            Task[] TaskPool = new Task[NumberOfCores];
-            var set_size = population.Count / NumberOfCores;
-
+            regionManagers = new Region[NumberOfCores];
+            int deltaX = maxX / NumberOfCores;
+            long singleSick = initialSick / NumberOfCores;
+            long singleHealthy = initialPopulation / NumberOfCores - singleSick;
             for (int i = 0; i < NumberOfCores; i++)
             {
-                int procIndex = i;
-                TaskPool[procIndex] = Task.Run(() =>
+                List<EntityOnMap> population = new List<EntityOnMap>();
+                // Populate the initially healthy population
+                for (uint _ = 0; _ < singleHealthy; _++)
                 {
-                    var skip = set_size * i;
-                    var manageable = population.Skip(skip).Take(set_size).ToList();
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    var previous = 0L;
-                    while (true)
-                    {
-                        while (SimState == SimulationState.RUNNING)
-                        {
-                            var current = sw.ElapsedMilliseconds;
-                            SimulateSubset(manageable, (ulong)((current - previous) * timeScale));
-                            SyncResource(skip, set_size, manageable);
-                            previous = current;
-                        }
-                        Thread.Sleep(100);
-                    }
-                });
+                    var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                    var entity_constructed = new HealthyEntity();
+                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                }
+                // Populate the initially sick population
+                for (uint _ = 0; _ < singleSick; _++)
+                {
+                    var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                    var entity_constructed = new SickEntity();
+                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                }
+                int localMaxX = i * deltaX + deltaX;
+                int localMinX = i * deltaX;
+                regionManagers[i] = new Region(
+                    population,
+                    SimState,
+                    (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
+                    (List<EntityOnMap> entity) => SyncResource(entity, i)
+                );
             }
         }
 
-        private void SimulateSubset(List<EntityOnMap> subset, ulong timeDeltaMs)
+        private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
         {
-            foreach (var item in subset)
-            {
-                item.entity.Tick(timeDeltaMs);
-                var scaled = item.entity.direction *= timeDeltaMs / 1000;
-                // item.location.X = new Point(1, 1);
-                item.location.X = (int)scaled.X;
-                item.location.X = (int)scaled.Y;
-
-                // Calculate new position
-                // Update new position
-            }
+            return entity.location.X < minAllowedX || entity.location.X > maxAllowedX;
         }
 
-        private void SyncResource(int skip, int set_size, List<EntityOnMap> subset)
+        private bool SyncResource(List<EntityOnMap> entities, int currentIndex)
         {
-            if (populationAccess.WaitOne(1000))
+            if (outOfBoundsLock.WaitOne(100))
             {
-                Console.WriteLine("Access IS acquired by thread.");
-                // Simulate some work.
-                // Thread.Sleep(50);
-                // Release the Mutex.
-                populationAccess.ReleaseMutex();
+                outOfBoundsPopulation.AddRange(entities);
+                outOfBoundsLock.ReleaseMutex();
+                return true;
             }
             else
             {
                 Console.WriteLine("Access NOT acquired by thread.");
+                return false;
             }
         }
 
         public void Start()
         {
-            SimState = SimulationState.RUNNING;
-        }
+            foreach (var item in regionManagers)
+            {
+                item.SimState = SimulationState.RUNNING;
+                item.StartLooping(this.timeScale);
+            }
 
+            // TODO Spawn a task to sync the out-of-bounds population
+        }
     }
 }

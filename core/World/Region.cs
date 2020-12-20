@@ -12,12 +12,20 @@ namespace DiseaseCore
         public Mutex inboundAccess = new Mutex();
         public List<EntityOnMap> inbound = new List<EntityOnMap>();
         public SimulationState SimState { get; set; }
-        private Func<EntityOnMap, bool> entityLeavesRegion;
+        private Func<EntityOnMap, bool> entityMustLeave;
+        private Func<List<EntityOnMap>, bool> upperPassEntities;
 
-        public Region(List<EntityOnMap> population, SimulationState SimState, Func<EntityOnMap, bool> entityLeavesRegion)
+        public Region(
+            List<EntityOnMap> population,
+            SimulationState SimState,
+            Func<EntityOnMap, bool> entityMustLeave,
+            Func<List<EntityOnMap>, bool> upperPassEntities
+        )
         {
             this.population = population;
             this.SimState = SimState;
+            this.entityMustLeave = entityMustLeave;
+            this.upperPassEntities = upperPassEntities;
         }
 
         public void StartLooping(float timeScale)
@@ -29,10 +37,26 @@ namespace DiseaseCore
             {
                 var current = sw.ElapsedMilliseconds;
                 var timeDeltaMS = (ulong)((current - previous) * timeScale);
-                population
+                population = population
                     .Select(x => SimulateSubset(ref x, timeDeltaMS))
-                    .Where(x => !entityLeavesRegion(x));
-                previous = current;
+                    .ToList();
+
+                // Perform entity removal that have left the region
+                var toRemove = population.Where(x => !entityMustLeave(x)).ToList();
+                if (upperPassEntities(toRemove))
+                {
+                    population = population.Where(x => !toRemove.Contains(x)).ToList();
+                };
+
+                // Perform entity addition that have entered the region
+                if (inboundAccess.WaitOne(100))
+                {
+                    population.AddRange(inbound);
+                    inbound.Clear();
+                    inboundAccess.ReleaseMutex();
+                }
+                previous = current; // Stopwatch update
+
             }
         }
 
