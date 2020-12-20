@@ -5,11 +5,18 @@ namespace DiseaseCore
 {
     class HealthyEntity : AbstractEntity
     {
-        protected readonly ushort age;
+        protected ushort age { get; set; }
 
         public HealthyEntity()
         {
             age = (ushort)rnd.Next(1, 70);
+        }
+
+        public SickEntity ConvertToSick()
+        {
+            var sick = new SickEntity();
+            sick.age = this.age;
+            return sick;
         }
     }
 }
