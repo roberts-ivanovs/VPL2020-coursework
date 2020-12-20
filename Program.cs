@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using DiseaseCore;
 
 namespace coursework
@@ -12,10 +11,10 @@ namespace coursework
             World simulation = new World(95, 5, 1.0f);
             Console.WriteLine("Starting!");
             simulation.Start();
-            Thread.Sleep(1000);
+            var res = simulation.GetCurrentState();
+            Console.WriteLine($"Result: {res.Count}");
             Console.WriteLine("Stopping!");
             simulation.Stop();
-            Thread.Sleep(1000);
         }
     }
 }
