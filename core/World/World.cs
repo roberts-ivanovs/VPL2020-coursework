@@ -40,6 +40,7 @@ namespace DiseaseCore
         /* Multiple threads */
         Region[] regionManagers;
         Task[] tasks;
+        Task syncTask;
 
         /* Game defining state */
         private SimulationState SimState = SimulationState.PAUSED;
@@ -53,29 +54,27 @@ namespace DiseaseCore
             /* Create different entity managers */
             regionManagers = new Region[NumberOfCores];
             int deltaX = maxX / NumberOfCores;
-            long singleSick = initialSick / NumberOfCores;
-            long singleHealthy = initialPopulation / NumberOfCores - singleSick;
+            List<EntityOnMap> population = new List<EntityOnMap>();
+            // Populate the initially healthy population
+            for (uint _ = 0; _ < initialPopulation - initialSick; _++)
+            {
+                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                var entity_constructed = new HealthyEntity();
+                outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+            }
+            // Populate the initially sick population
+            for (uint _ = 0; _ < initialSick; _++)
+            {
+                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                var entity_constructed = new SickEntity();
+                outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+            }
             for (int i = 0; i < NumberOfCores; i++)
             {
-                List<EntityOnMap> population = new List<EntityOnMap>();
-                // Populate the initially healthy population
-                for (uint _ = 0; _ < singleHealthy; _++)
-                {
-                    var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                    var entity_constructed = new HealthyEntity();
-                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
-                }
-                // Populate the initially sick population
-                for (uint _ = 0; _ < singleSick; _++)
-                {
-                    var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
-                    var entity_constructed = new SickEntity();
-                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
-                }
                 int localMaxX = i * deltaX + deltaX;
                 int localMinX = i * deltaX;
                 regionManagers[i] = new Region(
-                    population,
+                    new List<EntityOnMap>(),
                     SimState,
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
@@ -105,13 +104,82 @@ namespace DiseaseCore
 
         public void Start()
         {
+            tasks = new Task[regionManagers.Length];
+            for (int i = 0; i < regionManagers.Length; ++i)
+            {
+                tasks[i] = new Task(() =>
+                {
+                    var item = regionManagers[i];
+                    item.SimState = SimulationState.RUNNING;
+                    item.StartLooping(this.timeScale);
+                });
+                tasks[i].Start();
+            }
+            // Spawn a task to sync the out-of-bounds population
+            syncTask = new Task(() =>
+            {
+                int deltaX = maxX / NumberOfCores;
+                while (true)
+                {
+                    if (outOfBoundsLock.WaitOne(100))
+                    {
+                        // Initiate placeholder inbound values for each thread
+                        List<EntityOnMap>[] inbound = new List<EntityOnMap>[regionManagers.Length];
+                        for (int i = 0; i < regionManagers.Length; ++i)
+                        {
+                            inbound[i] = new List<EntityOnMap>();
+                        }
+
+                        // Iterate over all `outOfBoundsPopulation` and
+                        // figure out where should each item be placed
+                        foreach (var item in outOfBoundsPopulation)
+                        {
+                            // Place each item in its appropriate placeholder data container
+                            int index = item.location.X / deltaX;
+                            if (index >= regionManagers.Length)
+                            {
+                                index = 0;
+                            }
+                            else if (index < 0)
+                            {
+                                index = regionManagers.Length - 1;
+                            }
+                            inbound[index].Append(item);
+                        }
+
+                        outOfBoundsPopulation.Clear();
+                        // Place each item in its appropriate thread
+                        for (int i = 0; i < regionManagers.Length; ++i)
+                        {
+                            if (regionManagers[i].inboundAccess.WaitOne(100))
+                            {
+                                regionManagers[i].inbound.AddRange(inbound[i]);
+                            }
+                            else
+                            {
+                                // Try appending the inbound item later
+                                outOfBoundsPopulation.AddRange(inbound[i]);
+                            }
+                        }
+                        outOfBoundsLock.ReleaseMutex();
+                    }
+
+                    // Give time for other threads to populate the `outOfBoundsPopulation`
+                    Thread.Sleep(100);
+
+                }
+            });
+            syncTask.Start();
+        }
+
+        public void Stop()
+        {
             foreach (var item in regionManagers)
             {
-                item.SimState = SimulationState.RUNNING;
-                item.StartLooping(this.timeScale);
+                item.SimState = SimulationState.PAUSED;
             }
-
-            // TODO Spawn a task to sync the out-of-bounds population
+            Task.WaitAll(tasks); // Wait for all refion tasks to finish
+            syncTask.Dispose(); // Clear SyncTask
         }
     }
 }
