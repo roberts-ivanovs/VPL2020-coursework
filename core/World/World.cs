@@ -21,10 +21,10 @@ namespace DiseaseCore
         private static Random rnd = new Random();
 
         /* Map bounds */
-        private static int maxX = 1000;
-        private static int maxY = 1000;
-        private static int minX = -1000;
-        private static int minY = -1000;
+        internal readonly static int maxX = 1000;
+        internal readonly static int maxY = 1000;
+        internal readonly static int minX = -1000;
+        internal readonly static int minY = -1000;
 
         /* Non defining game state values */
         private uint initialPopulation { get; }
@@ -42,14 +42,14 @@ namespace DiseaseCore
         Task[] tasks;
         Task syncTask;
 
-        /* Game defining state */
-        private SimulationState SimState = SimulationState.PAUSED;
+        SimulationState SimState;
 
         public World(uint initialPopulation, uint initialSick, float timeScale)
         {
             this.initialPopulation = initialPopulation;
             this.initialSick = initialSick;
             this.timeScale = timeScale;
+            this.SimState = SimulationState.PAUSED;
 
             /* Create different entity managers */
             regionManagers = new Region[NumberOfCores];
@@ -75,7 +75,6 @@ namespace DiseaseCore
                 int localMinX = i * deltaX;
                 regionManagers[i] = new Region(
                     new List<EntityOnMap>(),
-                    SimState,
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
@@ -107,19 +106,21 @@ namespace DiseaseCore
             tasks = new Task[regionManagers.Length];
             for (int i = 0; i < regionManagers.Length; ++i)
             {
-                tasks[i] = new Task(() =>
+                int procIndex = i;
+                tasks[procIndex] = new Task(() =>
                 {
-                    var item = regionManagers[i];
+                    var item = regionManagers[procIndex];
                     item.SimState = SimulationState.RUNNING;
                     item.StartLooping(this.timeScale);
                 });
                 tasks[i].Start();
             }
+
             // Spawn a task to sync the out-of-bounds population
             syncTask = new Task(() =>
             {
                 int deltaX = maxX / NumberOfCores;
-                while (true)
+                while (this.SimState == SimulationState.RUNNING)
                 {
                     if (outOfBoundsLock.WaitOne(100))
                     {
@@ -136,6 +137,7 @@ namespace DiseaseCore
                         {
                             // Place each item in its appropriate placeholder data container
                             int index = item.location.X / deltaX;
+                            // Perform X axis wrapping
                             if (index >= regionManagers.Length)
                             {
                                 index = 0;
@@ -170,15 +172,18 @@ namespace DiseaseCore
                 }
             });
             syncTask.Start();
+            this.SimState = SimulationState.RUNNING;
         }
 
         public void Stop()
         {
+            this.SimState = SimulationState.PAUSED;
             foreach (var item in regionManagers)
             {
                 item.SimState = SimulationState.PAUSED;
             }
             Task.WaitAll(tasks); // Wait for all refion tasks to finish
+            syncTask.Wait();
             syncTask.Dispose(); // Clear SyncTask
         }
     }
