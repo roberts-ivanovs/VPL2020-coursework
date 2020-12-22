@@ -30,7 +30,7 @@ namespace DiseaseCore
         private uint initialHealthy { get; }
         private uint initialSick { get; }
         private float timeScale { get; set; }
-        static int NumberOfCores = Environment.ProcessorCount;
+        public static int NumberOfCores { get; } = Environment.ProcessorCount;
 
 
         /* Live population accessors  */
