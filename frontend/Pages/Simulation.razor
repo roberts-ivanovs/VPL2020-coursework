@@ -1,4 +1,4 @@
-﻿@page "/"
+@page "/"
 @inject HttpClient Http
 
 <h1>Simulation</h1>
@@ -14,7 +14,7 @@
         <input
             type="range"
             min="0"
-            max="100000"
+            max="@UInt32.MaxValue"
             step="1"
             @bind="InitialPopulation"
             @bind:event="oninput"
