@@ -58,10 +58,9 @@
 
 
 @code {
-
-    public ulong InitialPopulation { get; set; } = 10000;
-    public ulong InitialSickPeople { get; set; } = 10;
-    public float TimeScale { get; set; } = 1f;
+    private uint InitialPopulation { get; set; } = 10000;
+    private uint InitialSickPeople { get; set; } = 10;
+    private float TimeScale { get; set; } = 1f;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
