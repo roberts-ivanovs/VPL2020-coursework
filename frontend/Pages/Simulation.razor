@@ -1,0 +1,76 @@
+﻿@page "/"
+@inject HttpClient Http
+
+<h1>Simulation</h1>
+
+<p>Perform a simple simulation of the COVID disease </p>
+
+<div>
+    @* Initial population <input type="number" min="1" @onchange="IncrementCount" /> *@
+    <div>
+        Initial population = @InitialPopulation
+    </div>
+    <div>
+        <input
+            type="range"
+            min="0"
+            max="100000"
+            step="1"
+            @bind="InitialPopulation"
+            @bind:event="oninput"
+            @onchange="HandleGlobalPopulationChange"
+        />
+    </div>
+</div>
+<div>
+    <div>
+        Initial sick people = @InitialSickPeople / @InitialPopulation
+    </div>
+    <div>
+        <input
+            type="range"
+            min="0"
+            max="@InitialPopulation"
+            step="1"
+            @bind="InitialSickPeople"
+            @bind:event="oninput"
+        />
+    </div>
+</div>
+<div>
+    <div>
+        Time Scale = @TimeScale
+    </div>
+    <div>
+        <input
+            type="range"
+            min="0"
+            max="100"
+            step="0.1"
+            @bind="TimeScale"
+            @bind:event="oninput"
+        />
+    </div>
+</div>
+<div>
+    <button type="button">START</button>
+</div>
+
+
+@code {
+
+    public ulong InitialPopulation { get; set; } = 10000;
+    public ulong InitialSickPeople { get; set; } = 10;
+    public float TimeScale { get; set; } = 1f;
+
+    void HandleGlobalPopulationChange(ChangeEventArgs e)
+    {
+        if (ulong.TryParse((string)e.Value, out var value))
+        {
+            if (value < InitialSickPeople) {
+                InitialSickPeople = value;
+            }
+        }
+    }
+
+}
