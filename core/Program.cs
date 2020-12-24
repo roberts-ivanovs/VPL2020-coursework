@@ -12,16 +12,16 @@ namespace coursework
             Console.WriteLine("Starting!");
             simulation.Start();
             var res = simulation.GetCurrentState();
-            Console.WriteLine($"Result: {res.Count}");
+            Console.WriteLine($"Result: {res}");
             Console.WriteLine("Read again!");
             res = simulation.GetCurrentState();
-            Console.WriteLine($"Result: {res.Count}");
+            Console.WriteLine($"Result: {res}");
             Console.WriteLine("Read again!");
             res = simulation.GetCurrentState();
-            Console.WriteLine($"Result: {res.Count}");
+            Console.WriteLine($"Result: {res}");
             Console.WriteLine("Read again!");
             res = simulation.GetCurrentState();
-            Console.WriteLine($"Result: {res.Count}");
+            Console.WriteLine($"Result: {res}");
 
             Console.WriteLine("Stopping!");
 

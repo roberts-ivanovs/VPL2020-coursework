@@ -8,11 +8,18 @@ using System.Threading.Tasks;
 
 namespace DiseaseCore
 {
-    internal enum SimulationState
+    public enum SimulationState
     {
         PAUSED,
         RUNNING,
         DEAD,
+    }
+
+    public struct GameState
+    {
+        public List<EntityOnMap> items;
+        public ushort sickPeople;
+        public ushort healthyPeople;
     }
 
     public class World
@@ -27,10 +34,14 @@ namespace DiseaseCore
         internal readonly static int minY = -1000;
 
         /* Non defining game state values */
-        private uint initialHealthy { get; }
-        private uint initialSick { get; }
+        private ushort initialHealthy { get; }
+        private ushort initialSick { get; }
         private float timeScale { get; set; }
-        public static int NumberOfCores { get; } = Environment.ProcessorCount;
+
+        // Using 2/3 of the computer cores. The other 1/3 is used for UI
+        // rendering, server handling, etc.
+        // WARNING: Remove the arithmetic below and watch your computer incenerate
+        public static int NumberOfCores { get; } = Environment.ProcessorCount * 2 / 3;
 
 
         /* Live population accessors  */
@@ -43,7 +54,7 @@ namespace DiseaseCore
         private Task syncTask;
         private SimulationState SimState;
 
-        public World(uint initialHealthy, uint initialSick, float timeScale)
+        public World(ushort initialHealthy, ushort initialSick, float timeScale)
         {
             this.initialHealthy = initialHealthy;
             this.initialSick = initialSick;
@@ -56,14 +67,14 @@ namespace DiseaseCore
             List<EntityOnMap> population = new List<EntityOnMap>();
             // Populate the initially healthy population
             outOfBoundsLock.WaitOne();
-            for (uint _ = 0; _ < initialHealthy; _++)
+            for (ushort _ = 0; _ < initialHealthy; _++)
             {
                 var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
                 var entity_constructed = new HealthyEntity();
                 outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
             }
             // Populate the initially sick population
-            for (uint _ = 0; _ < initialSick; _++)
+            for (ushort _ = 0; _ < initialSick; _++)
             {
                 var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
                 var entity_constructed = new SickEntity();
@@ -80,6 +91,11 @@ namespace DiseaseCore
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
             }
+        }
+
+        public SimulationState GetState()
+        {
+            return SimState;
         }
 
         private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
@@ -131,6 +147,7 @@ namespace DiseaseCore
 
         public void Stop()
         {
+            Console.WriteLine("KILLING THE SIMULATION");
             this.SimState = SimulationState.DEAD;
             foreach (var item in regionManagers)
             {
@@ -139,50 +156,61 @@ namespace DiseaseCore
             Task.WaitAll(tasks); // Wait for all refion tasks to finish
             syncTask.Wait();
             syncTask.Dispose(); // Clear SyncTask
+            Console.WriteLine("SIMULATION IS DEAD");
+
         }
 
-        public List<EntityOnMap> GetCurrentState()
+        public GameState GetCurrentState()
         {
             SyncTaskCode();
             this.SimState = SimulationState.PAUSED;
-            for (int i = 0; i < regionManagers.Length; ++i)
+            List<EntityOnMap>[] population;
             {
-                regionManagers[i].SimState = SimulationState.PAUSED;
-            }
-            Task.WaitAll(tasks);
-            // SyncTaskCode();
-
-            // Asynchronously extract the current state from each running task
-            Task[] waitingData = new Task[regionManagers.Length];
-            List<EntityOnMap>[] population = new List<EntityOnMap>[regionManagers.Length];
-            for (int i = 0; i < regionManagers.Length; ++i)
-            {
-                int procIndex = i;
-                waitingData[procIndex] = new Task(() =>
+                for (int i = 0; i < regionManagers.Length; ++i)
                 {
-                    var item = regionManagers[procIndex].getEntities();
-                    Console.WriteLine($"Getting entities {item.Count()}");
-                    population[procIndex] = item;
-                });
-                waitingData[procIndex].Start();
+                    regionManagers[i].SimState = SimulationState.PAUSED;
+                }
+                Task.WaitAll(tasks);
+
+                // Asynchronously extract the current state from each running task
+                Task[] waitingData = new Task[regionManagers.Length];
+                population = new List<EntityOnMap>[regionManagers.Length];
+                for (int i = 0; i < regionManagers.Length; ++i)
+                {
+                    int procIndex = i;
+                    waitingData[procIndex] = new Task(() =>
+                    {
+                        var item = regionManagers[procIndex].getEntities();
+                        population[procIndex] = item;
+                    });
+                    waitingData[procIndex].Start();
+                }
+                Task.WaitAll(waitingData);
             }
-            Task.WaitAll(waitingData);
+            this.SimState = SimulationState.RUNNING;
             var returnable = population.Aggregate(
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
             ).ToList();
-            this.SimState = SimulationState.PAUSED;
             for (int i = 0; i < regionManagers.Length; ++i)
             {
-                regionManagers[i].SimState = SimulationState.PAUSED;
+                regionManagers[i].SimState = SimulationState.RUNNING;
             }
-            return returnable;
+            var sickPeople = (ushort)returnable.GroupBy(x => x.entity is SickEntity).Count();
+            var healthyPeople = (ushort)(returnable.Count() - sickPeople);
+
+            Console.WriteLine($"HEALTHY {healthyPeople} | SICK {sickPeople}");
+            return new GameState
+            {
+                items = returnable,
+                sickPeople = sickPeople,
+                healthyPeople = healthyPeople,
+            };
         }
 
         private void SyncTaskCode()
         {
             int deltaX = maxX / NumberOfCores;
-            Console.WriteLine($"outOfBoundsPopulation {outOfBoundsPopulation.Count()}");
             if (outOfBoundsLock.WaitOne())
             {
                 // Initiate placeholder inbound values for each thread
@@ -216,7 +244,6 @@ namespace DiseaseCore
                 {
                     if (inbound[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne(10))
                     {
-                        Console.WriteLine($"Region manager recieves {inbound[i].Count()} entities");
                         regionManagers[i].inbound.AddRange(inbound[i]);
                         regionManagers[i].inboundAccess.ReleaseMutex();
                     }
@@ -228,7 +255,6 @@ namespace DiseaseCore
                 }
                 outOfBoundsLock.ReleaseMutex();
             }
-            Console.WriteLine("outOfBoundsLock received");
         }
     }
 }
