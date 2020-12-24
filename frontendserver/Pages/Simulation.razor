@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using System.Threading
+@using System.Linq
 
 <h1>Simulation</h1>
 
@@ -10,15 +12,8 @@
         Initial population = @InitialPopulation
     </div>
     <div>
-        <input
-            type="range"
-            min="0"
-            max="@UInt32.MaxValue"
-            step="1"
-            @bind="InitialPopulation"
-            @bind:event="oninput"
-            @onchange="HandleGlobalPopulationChange"
-        />
+        <input type="range" min="0" max="@ushort.MaxValue" step="1" disabled="@(!inputsEnabled)"
+            @bind="InitialPopulation" @bind:event="oninput" @onchange="HandleGlobalPopulationChange" />
     </div>
 </div>
 <div>
@@ -26,14 +21,8 @@
         Initial sick people = @InitialSickPeople / @InitialPopulation
     </div>
     <div>
-        <input
-            type="range"
-            min="0"
-            max="@InitialPopulation"
-            step="1"
-            @bind="InitialSickPeople"
-            @bind:event="oninput"
-        />
+        <input type="range" min="0" max="@InitialPopulation" step="1" disabled="@(!inputsEnabled)"
+            @bind="InitialSickPeople" @bind:event="oninput" />
     </div>
 </div>
 <div>
@@ -41,44 +30,85 @@
         Time Scale = @TimeScale
     </div>
     <div>
-        <input
-            type="range"
-            min="0"
-            max="100"
-            step="0.1"
-            @bind="TimeScale"
-            @bind:event="oninput"
-        />
+        <input type="range" min="0" max="100" step="0.1" disabled="@(!inputsEnabled)" @bind="TimeScale"
+            @bind:event="oninput" />
     </div>
 </div>
 <div>
-<p>Number of cores @(simulation == null ? "unknown" : World.NumberOfCores.ToString())</p>
+    <p>Number of cores @(simulation == null ? "unknown" : World.NumberOfCores.ToString())</p>
 </div>
 <div>
-    <button type="button" @onclick="StartSimulation">START</button>
-    <button type="button" @onclick="StartSimulation">STOP</button>
-    <button type="button" @onclick="StartSimulation">PAUSE</button>
+    <button type="button" @onclick="StartSimulation" disabled="@(!startButtonEnabled)">
+        START
+    </button>
+    <button type="button" @onclick="StopSimulation" disabled="@(!stopButtonEnabled)">
+        STOP
+    </button>
+</div>
+<div>
+    Sick people @(gameState.sickPeople)
+</div>
+<div>
+    Healthy people @(gameState.healthyPeople)
 </div>
 
 
 @code {
-    private List<EntityOnMap> mapItems;
+    private GameState gameState;
     private World simulation;
-    private uint InitialPopulation { get; set; } = 10000;
-    private uint InitialSickPeople { get; set; } = 10;
+    private ushort InitialPopulation { get; set; } = 10000;
+    private ushort InitialSickPeople { get; set; } = 10;
     private float TimeScale { get; set; } = 1f;
+    private bool stopButtonEnabled { get; set; } = false;
+    private bool startButtonEnabled { get; set; } = true;
+    private bool inputsEnabled { get; set; } = true;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
-        if (uint.TryParse((string)e.Value, out var value))
+        if (ushort.TryParse((string)e.Value, out var value))
         {
-            if (value < InitialSickPeople) {
+            if (value < InitialSickPeople)
+            {
                 InitialSickPeople = value;
             }
         }
     }
 
-    void StartSimulation() {
-        simulation = new World(InitialPopulation - InitialSickPeople, InitialSickPeople, TimeScale);
+    async void StartSimulation()
+    {
+        simulation = new World((ushort)(InitialPopulation - InitialSickPeople), InitialSickPeople, TimeScale);
+        simulation.Start();
+        stopButtonEnabled = true;
+        startButtonEnabled = false;
+        inputsEnabled = false;
+        await ReloadInformation();
     }
+
+    void StopSimulation()
+    {
+        if (simulation != null)
+        {
+            stopButtonEnabled = false;
+            startButtonEnabled = true;
+            inputsEnabled = true;
+            simulation.Stop();
+        }
+    }
+
+    @* TODO FINISH THIS https://devblogs.microsoft.com/pfxteam/task-run-vs-task-factory-startnew/ *@
+    async Task ReloadInformation()
+    {
+        await Task.Run(async () => await RoutinelySnapshotData());
+    }
+
+    async Task RoutinelySnapshotData()
+    {
+        while (!startButtonEnabled)
+        {
+            gameState = simulation.GetCurrentState();
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(100);
+        }
+    }
+
 }
