@@ -3,6 +3,7 @@
 @using Blazor.Extensions.Canvas.Canvas2D
 @using Newtonsoft.Json
 @using Newtonsoft.Json.Linq
+@using System.Drawing
 @inject IJSRuntime jsRuntime
 
 <div class="border-item">
@@ -14,15 +15,43 @@
 
     protected BECanvasComponent _canvasReference;
 
+    private static double radiusFull = 2 * Math.PI;
+    private static double circleSize = 4;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         this._context = await this._canvasReference.CreateCanvas2DAsync();
-        await this._context.SetFillStyleAsync("green");
-
-        await this._context.FillRectAsync(10, 100, 100, 100);
-
-        await this._context.SetFontAsync("48px serif");
-        await this._context.StrokeTextAsync("Hello Blazor!!!", 10, 100);
+        @* await DrawCircle(100/2, 100/2); *@
     }
+
+    public void DrawItems(List<EntityOnMap> items)
+    {
+        var task = _context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
+        task.Wait();
+
+        var tasks = items
+            .Select(x => NormalizeLocation(World.MaxCoords, x.location))
+            .Select(x => DrawCircle(x))
+            .ToArray();
+        Task.WaitAll(tasks);
+    }
+
+    private Point NormalizeLocation(Point oldSystemCoords, Point pointInOldSystem)
+    {
+        return new Point(
+            (int)(pointInOldSystem.X / (float) oldSystemCoords.X * _canvasReference.Width),
+            (int)(pointInOldSystem.Y / (float) oldSystemCoords.Y * _canvasReference.Height)
+        );
+    }
+
+    private async Task DrawCircle(Point location)
+    {
+        await this._context.BeginPathAsync();
+        await this._context.ArcAsync(location.X, location.Y, circleSize, 0, radiusFull);
+        await this._context.SetFillStyleAsync("green");
+        await this._context.FillAsync();
+        await this._context.SetLineWidthAsync(1f);
+        @* await this._context.StrokeAsync(); *@
+    }
+
 
 }

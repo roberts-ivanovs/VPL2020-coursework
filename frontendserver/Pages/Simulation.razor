@@ -9,7 +9,7 @@
 <div class="container">
     <div class="row">
         <div class="col-8">
-            <Canvas />
+            <Canvas @ref="EntityCanvas" />
         </div>
 
         <div class="col-4">
@@ -64,12 +64,14 @@
 @code {
     private GameState gameState;
     private World simulation;
-    private ushort InitialPopulation { get; set; } = 10000;
+    private ushort InitialPopulation { get; set; } = 100;
     private ushort InitialSickPeople { get; set; } = 10;
     private float TimeScale { get; set; } = 1f;
     private bool stopButtonEnabled { get; set; } = false;
     private bool startButtonEnabled { get; set; } = true;
     private bool inputsEnabled { get; set; } = true;
+
+    private Canvas EntityCanvas;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
@@ -113,6 +115,7 @@
         while (!startButtonEnabled)
         {
             gameState = simulation.GetCurrentState();
+            await Task.Run(() => EntityCanvas.DrawItems(gameState.items));
             await InvokeAsync(StateHasChanged);
             await Task.Delay(100);
         }
