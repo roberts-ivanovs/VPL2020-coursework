@@ -168,11 +168,7 @@ namespace DiseaseCore
 
         public GameState GetCurrentState()
         {
-
-            Console.WriteLine($"GetCurrentState 1");
-
             SyncTaskCode();
-            Console.WriteLine($"GetCurrentState 2");
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
             {
@@ -180,9 +176,6 @@ namespace DiseaseCore
                 {
                     regionManagers[i].SimState = SimulationState.PAUSED;
                 }
-                Console.WriteLine($"GetCurrentState 2.1");
-                // Task.WaitAll(tasks);
-                Console.WriteLine($"GetCurrentState 2.1.1");
 
                 // Asynchronously extract the current state from each running task
                 Task[] waitingData = new Task[regionManagers.Length];
@@ -197,16 +190,13 @@ namespace DiseaseCore
                     });
                     waitingData[procIndex].Start();
                 }
-                Console.WriteLine($"GetCurrentState 2.2");
                 Task.WaitAll(waitingData);
             }
-            Console.WriteLine($"GetCurrentState 3");
             this.SimState = SimulationState.RUNNING;
             var returnable = population.Aggregate(
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
             ).ToList();
-            Console.WriteLine($"GetCurrentState 4 {returnable.Count()}");
             for (int i = 0; i < regionManagers.Length; ++i)
             {
                 regionManagers[i].SimState = SimulationState.RUNNING;
@@ -214,7 +204,6 @@ namespace DiseaseCore
             var sickPeople = (ushort)returnable.GroupBy(x => x.entity is SickEntity).Count();
             var healthyPeople = (ushort)(returnable.Count() - sickPeople);
 
-            Console.WriteLine($"HEALTHY {healthyPeople} | SICK {sickPeople}");
             return new GameState
             {
                 items = returnable,
@@ -241,7 +230,6 @@ namespace DiseaseCore
                 {
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
-                    Console.WriteLine($"out of bounds new idx {index}");
                     // Perform X axis wrapping
                     if (index >= regionManagers.Length)
                     {
