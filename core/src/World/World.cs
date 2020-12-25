@@ -63,21 +63,27 @@ namespace DiseaseCore
             int deltaX = World.MaxCoords.X / NumberOfCores;
             List<EntityOnMap> population = new List<EntityOnMap>();
             // Populate the initially healthy population
-            outOfBoundsLock.WaitOne();
-            for (ushort _ = 0; _ < initialHealthy; _++)
+            if (outOfBoundsLock.WaitOne(10))
             {
-                var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
-                var entity_constructed = new HealthyEntity();
-                outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                for (ushort _ = 0; _ < initialHealthy; _++)
+                {
+                    var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
+                    var entity_constructed = new HealthyEntity();
+                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                }
+                // Populate the initially sick population
+                for (ushort _ = 0; _ < initialSick; _++)
+                {
+                    var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
+                    var entity_constructed = new SickEntity();
+                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                }
+                outOfBoundsLock.ReleaseMutex();
             }
-            // Populate the initially sick population
-            for (ushort _ = 0; _ < initialSick; _++)
+            else
             {
-                var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
-                var entity_constructed = new SickEntity();
-                outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                throw new InvalidOperationException("The initial mutex was already locked!");
             }
-            outOfBoundsLock.ReleaseMutex();
             for (int i = 0; i < NumberOfCores; i++)
             {
                 int localMaxX = i * deltaX + deltaX;
@@ -102,7 +108,7 @@ namespace DiseaseCore
 
         private bool SyncResource(List<EntityOnMap> entities, int currentIndex)
         {
-            if (outOfBoundsLock.WaitOne(100))
+            if (outOfBoundsLock.WaitOne(10))
             {
                 outOfBoundsPopulation.AddRange(entities);
                 outOfBoundsLock.ReleaseMutex();
@@ -133,9 +139,12 @@ namespace DiseaseCore
             // Spawn a task to sync the out-of-bounds population
             syncTask = new Task(() =>
             {
-                while (this.SimState == SimulationState.RUNNING)
+                while (this.SimState != SimulationState.DEAD)
                 {
-                    SyncTaskCode();
+                    while (this.SimState == SimulationState.RUNNING)
+                    {
+                        SyncTaskCode();
+                    }
                 }
             });
             this.SimState = SimulationState.RUNNING;
@@ -159,7 +168,11 @@ namespace DiseaseCore
 
         public GameState GetCurrentState()
         {
+
+            Console.WriteLine($"GetCurrentState 1");
+
             SyncTaskCode();
+            Console.WriteLine($"GetCurrentState 2");
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
             {
@@ -167,7 +180,9 @@ namespace DiseaseCore
                 {
                     regionManagers[i].SimState = SimulationState.PAUSED;
                 }
-                Task.WaitAll(tasks);
+                Console.WriteLine($"GetCurrentState 2.1");
+                // Task.WaitAll(tasks);
+                Console.WriteLine($"GetCurrentState 2.1.1");
 
                 // Asynchronously extract the current state from each running task
                 Task[] waitingData = new Task[regionManagers.Length];
@@ -182,13 +197,16 @@ namespace DiseaseCore
                     });
                     waitingData[procIndex].Start();
                 }
+                Console.WriteLine($"GetCurrentState 2.2");
                 Task.WaitAll(waitingData);
             }
+            Console.WriteLine($"GetCurrentState 3");
             this.SimState = SimulationState.RUNNING;
             var returnable = population.Aggregate(
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
             ).ToList();
+            Console.WriteLine($"GetCurrentState 4 {returnable.Count()}");
             for (int i = 0; i < regionManagers.Length; ++i)
             {
                 regionManagers[i].SimState = SimulationState.RUNNING;
@@ -208,7 +226,7 @@ namespace DiseaseCore
         private void SyncTaskCode()
         {
             int deltaX = MaxCoords.X / NumberOfCores;
-            if (outOfBoundsLock.WaitOne())
+            if (outOfBoundsLock.WaitOne(10))
             {
                 // Initiate placeholder inbound values for each thread
                 List<EntityOnMap>[] inbound = new List<EntityOnMap>[regionManagers.Length];
@@ -223,14 +241,20 @@ namespace DiseaseCore
                 {
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
+                    Console.WriteLine($"out of bounds new idx {index}");
                     // Perform X axis wrapping
                     if (index >= regionManagers.Length)
                     {
+                        // var newLocX = deltaX - (item.location.X / deltaX) ;
+                        item.location.X = 0;
                         index = 0;
                     }
-                    else if (index < 0)
+                    else if (index <= 0)
                     {
+                        // var newLocX = MaxCoords.X - item.location.X;
+                        item.location.X = MaxCoords.X;
                         index = regionManagers.Length - 1;
+
                     }
                     inbound[index].Add(item);
                 }
@@ -251,6 +275,10 @@ namespace DiseaseCore
                     }
                 }
                 outOfBoundsLock.ReleaseMutex();
+            }
+            else
+            {
+                Console.WriteLine("Blocked inside SyncTaskCode!");
             }
         }
     }

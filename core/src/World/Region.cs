@@ -37,32 +37,35 @@ namespace DiseaseCore
             var sw = new Stopwatch();
             sw.Start();
             var previous = 0L;
-            while (SimState == SimulationState.RUNNING)
+            while (SimState != SimulationState.DEAD)
             {
-                if (populationAccess.WaitOne())
+                while (SimState == SimulationState.RUNNING)
                 {
-                    var current = sw.ElapsedMilliseconds;
-                    var timeDeltaMS = (ulong)((current - previous) * timeScale);
-                    population = population
-                        .Select(x => SimulateSubset(ref x, timeDeltaMS))
-                        .ToList();
-                    // TODO: Make entities sick if they need to
-
-
-                    // Perform entity removal that have left the region
-                    var toRemove = population.Where(x => !entityMustLeave(x)).ToList();
-                    if (upperPassEntities(toRemove))
+                    if (populationAccess.WaitOne(10))
                     {
-                        population = population.Where(x => !toRemove.Contains(x)).ToList();
-                    };
+                        var current = sw.ElapsedMilliseconds;
+                        var timeDeltaMS = (ulong)((current - previous) * timeScale);
+                        population = population
+                            .Select(x => SimulateSubset(ref x, timeDeltaMS))
+                            .ToList();
+                        // TODO: Make entities sick if they need to
 
-                    ReadFromInbound();
-                    previous = current; // Stopwatch update
-                    populationAccess.ReleaseMutex();
-                }
-                else
-                {
-                    Console.WriteLine($"Region couldnt access its own population");
+
+                        // Perform entity removal that have left the region
+                        var toRemove = population.Where(x => entityMustLeave(x)).ToList();
+                        if (upperPassEntities(toRemove))
+                        {
+                            population = population.Where(x => !toRemove.Contains(x)).ToList();
+                        };
+
+                        ReadFromInbound();
+                        previous = current; // Stopwatch update
+                        populationAccess.ReleaseMutex();
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Region couldnt access its own population");
+                    }
                 }
             }
         }
@@ -70,11 +73,18 @@ namespace DiseaseCore
         private void ReadFromInbound()
         {
             // Perform entity addition that have entered the region
-            if (inbound.Count() > 0 && inboundAccess.WaitOne())
+            if (inbound.Count() > 0 && inboundAccess.WaitOne(10))
             {
                 population.AddRange(inbound);
                 inbound.Clear();
                 inboundAccess.ReleaseMutex();
+            }
+            else
+            {
+                if (inbound.Count() > 0)
+                {
+                Console.WriteLine($"Couldnt access inbound lock! items - {inbound.Count()}");
+                }
             }
         }
 
@@ -100,10 +110,19 @@ namespace DiseaseCore
         public List<EntityOnMap> getEntities()
         {
             SimState = SimulationState.PAUSED;
-            populationAccess.WaitOne();
-            ReadFromInbound();
-            var res = population;
-            populationAccess.ReleaseMutex();
+            List<EntityOnMap> res;
+            if (populationAccess.WaitOne(10))
+            {
+
+                ReadFromInbound();
+                res = population;
+                populationAccess.ReleaseMutex();
+            }
+            else
+            {
+                Console.WriteLine("Regioun public API couldnt get population lock");
+                res = new List<EntityOnMap>();
+            }
             SimState = SimulationState.RUNNING;
             return res;
         }
