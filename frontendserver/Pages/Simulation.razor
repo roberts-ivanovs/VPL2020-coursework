@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using System.Threading
 @using System.Linq
+@using System.Diagnostics
 
 <h1>Simulation</h1>
 
@@ -71,6 +72,7 @@
     private bool startButtonEnabled { get; set; } = true;
     private bool inputsEnabled { get; set; } = true;
 
+    private int renderCanvasAfterEveryMiliseconds {get;} = 100;
     private Canvas EntityCanvas;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
@@ -112,12 +114,19 @@
 
     async Task RoutinelySnapshotData()
     {
+        var sw = new Stopwatch();
+        sw.Start();
+        var before = 0L;
         while (!startButtonEnabled)
         {
-            gameState = simulation.GetCurrentState();
-            await Task.Run(() => EntityCanvas.DrawItems(gameState.items));
-            await InvokeAsync(StateHasChanged);
-            await Task.Delay(100);
+            var now = sw.ElapsedMilliseconds;
+            var rerender = now - before > renderCanvasAfterEveryMiliseconds;
+            if (rerender) {
+                before = now;
+                gameState = simulation.GetCurrentState();
+                await Task.Run(async () => await EntityCanvas.DrawItems(gameState.items));
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
