@@ -20,7 +20,6 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         this._context = await this._canvasReference.CreateCanvas2DAsync();
-        @* await DrawCircle(100/2, 100/2); *@
     }
 
     public void DrawItems(List<EntityOnMap> items)
@@ -50,7 +49,6 @@
         await this._context.SetFillStyleAsync("green");
         await this._context.FillAsync();
         await this._context.SetLineWidthAsync(1f);
-        @* await this._context.StrokeAsync(); *@
     }
 
 
