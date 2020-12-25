@@ -63,7 +63,7 @@ namespace DiseaseCore
             int deltaX = World.MaxCoords.X / NumberOfCores;
             List<EntityOnMap> population = new List<EntityOnMap>();
             // Populate the initially healthy population
-            if (outOfBoundsLock.WaitOne(10))
+            if (outOfBoundsLock.WaitOne())
             {
                 for (ushort _ = 0; _ < initialHealthy; _++)
                 {
@@ -108,7 +108,7 @@ namespace DiseaseCore
 
         private bool SyncResource(List<EntityOnMap> entities, int currentIndex)
         {
-            if (outOfBoundsLock.WaitOne(10))
+            if (outOfBoundsLock.WaitOne())
             {
                 outOfBoundsPopulation.AddRange(entities);
                 outOfBoundsLock.ReleaseMutex();
@@ -192,16 +192,22 @@ namespace DiseaseCore
                 }
                 Task.WaitAll(waitingData);
             }
-            this.SimState = SimulationState.RUNNING;
             var returnable = population.Aggregate(
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
             ).ToList();
+            // if (outOfBoundsLock.WaitOne())
+            // {
+            //     returnable.AddRange(this.outOfBoundsPopulation);
+            //     outOfBoundsLock.ReleaseMutex();
+            // }
+
+            this.SimState = SimulationState.RUNNING;
             for (int i = 0; i < regionManagers.Length; ++i)
             {
                 regionManagers[i].SimState = SimulationState.RUNNING;
             }
-            var sickPeople = (ushort)returnable.GroupBy(x => x.entity is SickEntity).Count();
+            var sickPeople = (ushort)returnable.Where(x => x.entity is SickEntity).Count();
             var healthyPeople = (ushort)(returnable.Count() - sickPeople);
 
             return new GameState
@@ -215,7 +221,7 @@ namespace DiseaseCore
         private void SyncTaskCode()
         {
             int deltaX = MaxCoords.X / NumberOfCores;
-            if (outOfBoundsLock.WaitOne(10))
+            if (outOfBoundsLock.WaitOne())
             {
                 // Initiate placeholder inbound values for each thread
                 List<EntityOnMap>[] inbound = new List<EntityOnMap>[regionManagers.Length];
@@ -251,7 +257,7 @@ namespace DiseaseCore
                 // Place each item in its appropriate thread
                 for (int i = 0; i < regionManagers.Length; ++i)
                 {
-                    if (inbound[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne(10))
+                    if (inbound[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne())
                     {
                         regionManagers[i].inbound.AddRange(inbound[i]);
                         regionManagers[i].inboundAccess.ReleaseMutex();

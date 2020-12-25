@@ -41,7 +41,7 @@ namespace DiseaseCore
             {
                 while (SimState == SimulationState.RUNNING)
                 {
-                    if (populationAccess.WaitOne(10))
+                    if (populationAccess.WaitOne())
                     {
                         var current = sw.ElapsedMilliseconds;
                         var timeDeltaMS = (ulong)((current - previous) * timeScale);
@@ -73,18 +73,19 @@ namespace DiseaseCore
         private void ReadFromInbound()
         {
             // Perform entity addition that have entered the region
-            if (inbound.Count() > 0 && inboundAccess.WaitOne(10))
+            if (inboundAccess.WaitOne() && populationAccess.WaitOne())
             {
                 population.AddRange(inbound);
                 inbound.Clear();
                 inboundAccess.ReleaseMutex();
+                populationAccess.ReleaseMutex();
             }
             else
             {
-                if (inbound.Count() > 0)
-                {
+                // if (inbound.Count() > 0)
+                // {
                 Console.WriteLine($"Couldnt access inbound lock! items - {inbound.Count()}");
-                }
+                // }
             }
         }
 
@@ -111,7 +112,7 @@ namespace DiseaseCore
         {
             SimState = SimulationState.PAUSED;
             List<EntityOnMap> res;
-            if (populationAccess.WaitOne(10))
+            if (populationAccess.WaitOne())
             {
 
                 ReadFromInbound();
