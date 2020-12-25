@@ -91,19 +91,20 @@ namespace DiseaseCore
         private static ref EntityOnMap SimulateSubset(ref EntityOnMap item, ulong timeDeltaMs)
         {
             item.entity.Tick(timeDeltaMs);
-            var scaled = item.entity.direction *= timeDeltaMs / 1000;
-            item.location.X += (int)scaled.X;
+            var velocity = item.entity.direction * timeDeltaMs;
+            item.location.X += (int)velocity.X;
+            item.location.Y += (int)velocity.Y;
+            Console.WriteLine($"{item.location.X} {item.location.Y}");
 
             // Perform Y axis wrapping
-            if ((uint)scaled.Y > World.MaxCoords.Y)
+            if ((uint)item.location.Y >= World.MaxCoords.Y)
             {
-                scaled.Y = 0;
+                item.location.Y = 0;
             }
-            else if ((uint)scaled.Y < 0)
+            else if ((uint)item.location.Y <= 0)
             {
-                scaled.Y = World.MaxCoords.Y;
+                item.location.Y = World.MaxCoords.Y;
             }
-            item.location.Y += (int)scaled.Y;
             return ref item;
         }
 
