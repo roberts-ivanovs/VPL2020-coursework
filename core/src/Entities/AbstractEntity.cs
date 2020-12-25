@@ -11,12 +11,12 @@ namespace DiseaseCore
 
         public AbstractEntity()
         {
-            direction = new Vector3(rnd.Next(-1, 1), rnd.Next(-1, 1), 0);
+            direction = new Vector3(rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
         }
         public virtual void Tick(ulong milliseconds)
         {
-            // 1/3 chance to get a new direction
-            if (rnd.Next(3) == 0)
+            // 1/100 chance to get a new direction
+            if (rnd.Next(100) == 0)
             {
                 direction = new Vector3(rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
             }
