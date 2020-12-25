@@ -16,9 +16,10 @@ namespace DiseaseCore
         public virtual void Tick(ulong milliseconds)
         {
             // 1/3 chance to get a new direction
-            if (rnd.Next(0, 2) == 0)
+            if (rnd.Next(3) == 0)
             {
-                direction = new Vector3(rnd.Next(-1, 1), rnd.Next(-1, 1), 0);
+                Console.WriteLine("new dir");
+                direction = new Vector3( rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
             }
         }
     }
