@@ -94,7 +94,6 @@ namespace DiseaseCore
             var velocity = item.entity.direction * timeDeltaMs;
             item.location.X += (int)velocity.X;
             item.location.Y += (int)velocity.Y;
-            Console.WriteLine($"{item.location.X} {item.location.Y}");
 
             // Perform Y axis wrapping
             if ((uint)item.location.Y >= World.MaxCoords.Y)
