@@ -6,52 +6,60 @@
 
 <p>Perform a simple simulation of the COVID disease </p>
 
-<div>
-    @* Initial population <input type="number" min="1" @onchange="IncrementCount" /> *@
-    <div>
-        Initial population = @InitialPopulation
-    </div>
-    <div>
-        <input type="range" min="0" max="@ushort.MaxValue" step="1" disabled="@(!inputsEnabled)"
-            @bind="InitialPopulation" @bind:event="oninput" @onchange="HandleGlobalPopulationChange" />
-    </div>
-</div>
-<div>
-    <div>
-        Initial sick people = @InitialSickPeople / @InitialPopulation
-    </div>
-    <div>
-        <input type="range" min="0" max="@InitialPopulation" step="1" disabled="@(!inputsEnabled)"
-            @bind="InitialSickPeople" @bind:event="oninput" />
-    </div>
-</div>
-<div>
-    <div>
-        Time Scale = @TimeScale
-    </div>
-    <div>
-        <input type="range" min="0" max="100" step="0.1" disabled="@(!inputsEnabled)" @bind="TimeScale"
-            @bind:event="oninput" />
-    </div>
-</div>
-<div>
-    <p>Number of cores @(simulation == null ? "unknown" : World.NumberOfCores.ToString())</p>
-</div>
-<div>
-    <button type="button" @onclick="StartSimulation" disabled="@(!startButtonEnabled)">
-        START
-    </button>
-    <button type="button" @onclick="StopSimulation" disabled="@(!stopButtonEnabled)">
-        STOP
-    </button>
-</div>
-<div>
-    Sick people @(gameState.sickPeople)
-</div>
-<div>
-    Healthy people @(gameState.healthyPeople)
-</div>
+<div class="container">
+    <div class="row">
+        <div class="col-8">
+            <Canvas />
+        </div>
 
+        <div class="col-4">
+            <div>
+                <div>
+                    Initial population = @InitialPopulation
+                </div>
+                <div>
+                    <input type="range" min="0" max="@ushort.MaxValue" step="1" disabled="@(!inputsEnabled)"
+                        @bind="InitialPopulation" @bind:event="oninput" @onchange="HandleGlobalPopulationChange" />
+                </div>
+            </div>
+            <div>
+                <div>
+                    Initial sick people = @InitialSickPeople / @InitialPopulation
+                </div>
+                <div>
+                    <input type="range" min="0" max="@InitialPopulation" step="1" disabled="@(!inputsEnabled)"
+                        @bind="InitialSickPeople" @bind:event="oninput" />
+                </div>
+            </div>
+            <div>
+                <div>
+                    Time Scale = @TimeScale
+                </div>
+                <div>
+                    <input type="range" min="0" max="100" step="0.1" disabled="@(!inputsEnabled)" @bind="TimeScale"
+                        @bind:event="oninput" />
+                </div>
+            </div>
+            <div>
+                <p>Number of cores @(simulation == null ? "unknown" : World.NumberOfCores.ToString())</p>
+            </div>
+            <div>
+                <button type="button" @onclick="StartSimulation" disabled="@(!startButtonEnabled)">
+                    START
+                </button>
+                <button type="button" @onclick="StopSimulation" disabled="@(!stopButtonEnabled)">
+                    STOP
+                </button>
+            </div>
+            <div>
+                Sick people @(gameState.sickPeople)
+            </div>
+            <div>
+                Healthy people @(gameState.healthyPeople)
+            </div>
+        </div>
+    </div>
+</div>
 
 @code {
     private GameState gameState;
