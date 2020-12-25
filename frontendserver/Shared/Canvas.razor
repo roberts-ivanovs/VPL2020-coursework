@@ -5,7 +5,9 @@
 @using Newtonsoft.Json.Linq
 @inject IJSRuntime jsRuntime
 
-<BECanvas Width="300" Height="400" @ref="_canvasReference"></BECanvas>
+<div class="border-item">
+    <BECanvas Width="600" Height="600" @ref="_canvasReference"></BECanvas>
+</div>
 
 @code {
     private Canvas2DContext _context;
