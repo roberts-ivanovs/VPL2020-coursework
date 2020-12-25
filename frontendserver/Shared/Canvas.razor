@@ -16,26 +16,34 @@
     protected BECanvasComponent _canvasReference;
 
     private static double radiusFull = 2 * Math.PI;
-    private static double circleSize = 4;
+    private static double circleRadius = 4;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         this._context = await this._canvasReference.CreateCanvas2DAsync();
     }
 
-    public void DrawItems(List<EntityOnMap> items)
+    public async Task DrawItems(List<EntityOnMap> items)
     {
-        var task = _context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
-        task.Wait();
+        await this._context.SetFillStyleAsync("green");
+        await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
 
+        await this._context.BeginPathAsync();
         var tasks = items
             .Select(x => NormalizeLocation(World.MaxCoords, x.location))
             .Select(x => DrawCircle(x))
             .ToArray();
         Task.WaitAll(tasks);
+        await this._context.StrokeAsync();
+        await this._context.FillAsync();
+
+        //await this._context.SetLineWidthAsync(0f);
     }
 
     private Point NormalizeLocation(Point oldSystemCoords, Point pointInOldSystem)
     {
+        /* The itnernal simulation is running in coordinates that are not same
+        to the visual canvas pixel coordinates */
         return new Point(
             (int)(pointInOldSystem.X / (float) oldSystemCoords.X * _canvasReference.Width),
             (int)(pointInOldSystem.Y / (float) oldSystemCoords.Y * _canvasReference.Height)
@@ -44,11 +52,17 @@
 
     private async Task DrawCircle(Point location)
     {
-        await this._context.BeginPathAsync();
-        await this._context.ArcAsync(location.X, location.Y, circleSize, 0, radiusFull);
-        await this._context.SetFillStyleAsync("green");
-        await this._context.FillAsync();
-        await this._context.SetLineWidthAsync(1f);
+        // This seems to be the preffered way drawing items on the canvas as per
+        // this StackOverflow anser - https://stackoverflow.com/a/31737509
+        await this._context.SaveAsync();
+        {
+            await this._context.TranslateAsync(location.X + circleRadius, location.Y);
+            await this._context.MoveToAsync(0, 0);
+            await this._context.ArcAsync(0, 0, circleRadius, 0, radiusFull, true);
+        }
+        await this._context.RestoreAsync();
+
+
     }
 
 
