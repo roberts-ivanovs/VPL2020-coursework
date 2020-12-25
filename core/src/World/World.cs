@@ -249,7 +249,7 @@ namespace DiseaseCore
                         item.location.X = 0;
                         index = 0;
                     }
-                    else if (index <= 0)
+                    else if (index < 0)
                     {
                         // var newLocX = MaxCoords.X - item.location.X;
                         item.location.X = MaxCoords.X;
