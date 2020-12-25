@@ -85,13 +85,13 @@ namespace DiseaseCore
             item.location.X += (int)scaled.X;
 
             // Perform Y axis wrapping
-            if ((uint)scaled.Y > World.maxY)
+            if ((uint)scaled.Y > World.MaxCoords.Y)
             {
-                scaled.Y = World.minY;
+                scaled.Y = 0;
             }
-            else if ((uint)scaled.Y < World.minY)
+            else if ((uint)scaled.Y < 0)
             {
-                scaled.Y = World.maxY;
+                scaled.Y = World.MaxCoords.Y;
             }
             item.location.Y += (int)scaled.Y;
             return ref item;

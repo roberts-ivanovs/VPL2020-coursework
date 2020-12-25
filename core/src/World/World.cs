@@ -28,10 +28,7 @@ namespace DiseaseCore
         private static Random rnd = new Random();
 
         /* Map bounds */
-        internal readonly static int maxX = 1000;
-        internal readonly static int maxY = 1000;
-        internal readonly static int minX = -1000;
-        internal readonly static int minY = -1000;
+        public readonly static Point MaxCoords = new Point(1000, 1000);
 
         /* Non defining game state values */
         private ushort initialHealthy { get; }
@@ -63,20 +60,20 @@ namespace DiseaseCore
 
             /* Create different entity managers */
             regionManagers = new Region[NumberOfCores];
-            int deltaX = maxX / NumberOfCores;
+            int deltaX = World.MaxCoords.X / NumberOfCores;
             List<EntityOnMap> population = new List<EntityOnMap>();
             // Populate the initially healthy population
             outOfBoundsLock.WaitOne();
             for (ushort _ = 0; _ < initialHealthy; _++)
             {
-                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
                 var entity_constructed = new HealthyEntity();
                 outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
             }
             // Populate the initially sick population
             for (ushort _ = 0; _ < initialSick; _++)
             {
-                var p = new Point(rnd.Next(minX, maxX), rnd.Next(minY, maxY));
+                var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
                 var entity_constructed = new SickEntity();
                 outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
             }
@@ -210,7 +207,7 @@ namespace DiseaseCore
 
         private void SyncTaskCode()
         {
-            int deltaX = maxX / NumberOfCores;
+            int deltaX = MaxCoords.X / NumberOfCores;
             if (outOfBoundsLock.WaitOne())
             {
                 // Initiate placeholder inbound values for each thread
