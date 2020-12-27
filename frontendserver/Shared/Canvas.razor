@@ -22,23 +22,8 @@
     }
 
 
-    public async Task DisplayItems(List<EntityOnMap> items)
+    public async Task DisplayItems((List<EntityOnMap>, List<EntityOnMap>) entitiesSorted)
     {
-
-        var entitiesSorted = items
-            .Aggregate(
-                new Tuple<List<EntityOnMap>, List<EntityOnMap>>(new List<EntityOnMap>(), new List<EntityOnMap>()),
-                (tuple, item) =>
-                {
-                    if (item.entity is SickEntity) {
-                        tuple.Item1.Add(item);
-                    } else {
-                        tuple.Item2.Add(item);
-                    }
-                    return tuple;
-                }
-            ).ToValueTuple();
-
         // Clear canvas
         await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
         // Render new items

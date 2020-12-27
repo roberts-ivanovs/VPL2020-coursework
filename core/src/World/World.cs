@@ -17,7 +17,8 @@ namespace DiseaseCore
 
     public struct GameState
     {
-        public List<EntityOnMap> items;
+
+        public (List<EntityOnMap>, List<EntityOnMap>) items;
         public ushort sickPeople;
         public ushort healthyPeople;
     }
@@ -207,12 +208,27 @@ namespace DiseaseCore
             {
                 regionManagers[i].SimState = SimulationState.RUNNING;
             }
-            var sickPeople = (ushort)returnable.Where(x => x.entity is SickEntity).Count();
-            var healthyPeople = (ushort)(returnable.Count() - sickPeople);
+
+            var items = returnable
+                .Aggregate(
+                    new Tuple<List<EntityOnMap>, List<EntityOnMap>>(new List<EntityOnMap>(), new List<EntityOnMap>()),
+                    (tuple, item) =>
+                    {
+                        if (item.entity is SickEntity) {
+                            tuple.Item1.Add(item);
+                        } else {
+                            tuple.Item2.Add(item);
+                        }
+                        return tuple;
+                    }
+                ).ToValueTuple();
+
+            var sickPeople = (ushort)items.Item1.Count();
+            var healthyPeople = (ushort)items.Item2.Count();
 
             return new GameState
             {
-                items = returnable,
+                items = items,
                 sickPeople = sickPeople,
                 healthyPeople = healthyPeople,
             };
