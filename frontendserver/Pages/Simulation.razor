@@ -52,18 +52,12 @@
                     STOP
                 </button>
             </div>
-            <div>
-                Sick people @(gameState.sickPeople)
-            </div>
-            <div>
-                Healthy people @(gameState.healthyPeople)
-            </div>
+            <Statistics @ref="_statistics" />
         </div>
     </div>
 </div>
 
 @code {
-    private GameState gameState;
     private World simulation;
     private ushort InitialPopulation { get; set; } = 100;
     private ushort InitialSickPeople { get; set; } = 5;
@@ -72,8 +66,9 @@
     private bool startButtonEnabled { get; set; } = true;
     private bool inputsEnabled { get; set; } = true;
 
-    private int renderCanvasAfterEveryMiliseconds {get;} = 100;
+    private int renderCanvasAfterEveryMiliseconds { get; } = 100;
     private Canvas EntityCanvas;
+    private Statistics _statistics;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
@@ -109,25 +104,25 @@
 
     async Task ReloadInformation()
     {
-        await Task.Run(async () => await RoutinelySnapshotData());
+        await Task.Run(async () =>
+            {
+            var sw = new Stopwatch();
+            sw.Start();
+            var before = 0L;
+            while (!startButtonEnabled)
+            {
+                var now = sw.ElapsedMilliseconds;
+                var rerender = now - before > renderCanvasAfterEveryMiliseconds;
+                if (rerender)
+                {
+                    before = now;
+                    var gameState = simulation.GetCurrentState();
+                    await _statistics.setNewData(gameState.sickPeople, gameState.healthyPeople);
+                    await EntityCanvas.DrawItems(gameState.items);
+                }
+            }
+        });
     }
 
-    async Task RoutinelySnapshotData()
-    {
-        var sw = new Stopwatch();
-        sw.Start();
-        var before = 0L;
-        while (!startButtonEnabled)
-        {
-            var now = sw.ElapsedMilliseconds;
-            var rerender = now - before > renderCanvasAfterEveryMiliseconds;
-            if (rerender) {
-                before = now;
-                gameState = simulation.GetCurrentState();
-                await Task.Run(async () => await EntityCanvas.DrawItems(gameState.items));
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-    }
 
 }

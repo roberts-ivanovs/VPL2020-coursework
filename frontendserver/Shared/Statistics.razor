@@ -1,0 +1,20 @@
+<div>
+    Sick people @(sickPeople)
+</div>
+<div>
+    Healthy people @(healthyPeople)
+</div>
+
+
+
+@code {
+    public ushort sickPeople  = 0;
+    public ushort healthyPeople = 0;
+
+    public async Task setNewData(ushort newSickPeople, ushort newHealthyPeople)
+    {
+        this.sickPeople = newSickPeople;
+        this.healthyPeople = newHealthyPeople;
+        await InvokeAsync(StateHasChanged);
+    }
+}
