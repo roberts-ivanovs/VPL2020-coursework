@@ -38,11 +38,10 @@
 
 
         await this._context.BeginPathAsync();
-        var tasks = items
+        items
             .Select(x => NormalizeLocation(World.MaxCoords, x.location))
-            .Select(x => DrawCircle(x))
-            .ToArray();
-        Task.WaitAll(tasks);
+            .Select(async (x) => await DrawCircle(x))
+            .ToList();
         await this._context.StrokeAsync();
         await this._context.FillAsync();
     }
