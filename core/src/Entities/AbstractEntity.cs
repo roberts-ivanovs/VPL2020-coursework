@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace DiseaseCore
 {
-    abstract class AbstractEntity
+    public abstract class AbstractEntity
     {
         /* Static initializers */
         protected readonly Random rnd = new Random();

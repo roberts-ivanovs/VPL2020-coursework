@@ -118,7 +118,7 @@
                     before = now;
                     var gameState = simulation.GetCurrentState();
                     await _statistics.setNewData(gameState.sickPeople, gameState.healthyPeople);
-                    await EntityCanvas.DrawItems(gameState.items);
+                    await EntityCanvas.DisplayItems(gameState.items);
                 }
             }
         });

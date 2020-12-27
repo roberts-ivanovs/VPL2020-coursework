@@ -3,7 +3,7 @@ using System.Numerics;
 
 namespace DiseaseCore
 {
-    class HealthyEntity : AbstractEntity
+    public class HealthyEntity : AbstractEntity
     {
         protected ushort age { get; set; }
 

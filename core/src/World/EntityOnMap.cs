@@ -8,7 +8,7 @@ namespace DiseaseCore
         public ulong ID { get; }
         public static ulong IDCounter = 0;
         public Point location;
-        internal AbstractEntity entity;
+        public AbstractEntity entity;
 
         internal EntityOnMap(Point location, AbstractEntity entity)
         {

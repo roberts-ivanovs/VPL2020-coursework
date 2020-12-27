@@ -21,10 +21,36 @@
         this._context = await this._canvasReference.CreateCanvas2DAsync();
     }
 
-    public async Task DrawItems(List<EntityOnMap> items)
+
+    public async Task DisplayItems(List<EntityOnMap> items)
     {
-        await this._context.SetFillStyleAsync("green");
+
+        var entitiesSorted = items
+            .Aggregate(
+                new Tuple<List<EntityOnMap>, List<EntityOnMap>>(new List<EntityOnMap>(), new List<EntityOnMap>()),
+                (tuple, item) =>
+                {
+                    if (item.entity is SickEntity) {
+                        tuple.Item1.Add(item);
+                    } else {
+                        tuple.Item2.Add(item);
+                    }
+                    return tuple;
+                }
+            ).ToValueTuple();
+
+        // Clear canvas
         await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
+        // Render new items
+        await DrawItems(entitiesSorted.Item1, "red");
+        await DrawItems(entitiesSorted.Item2, "green");
+
+    }
+
+    private async Task DrawItems(List<EntityOnMap> items, string color)
+    {
+        await this._context.SetFillStyleAsync(color);
+
 
         await this._context.BeginPathAsync();
         var tasks = items
@@ -34,18 +60,18 @@
         Task.WaitAll(tasks);
         await this._context.StrokeAsync();
         await this._context.FillAsync();
-
-        //await this._context.SetLineWidthAsync(0f);
     }
+
+
 
     private Point NormalizeLocation(Point oldSystemCoords, Point pointInOldSystem)
     {
         /* The itnernal simulation is running in coordinates that are not same
         to the visual canvas pixel coordinates */
         return new Point(
-            (int)(pointInOldSystem.X / (float) oldSystemCoords.X * _canvasReference.Width),
-            (int)(pointInOldSystem.Y / (float) oldSystemCoords.Y * _canvasReference.Height)
-        );
+            (int)(pointInOldSystem.X / (float)oldSystemCoords.X * _canvasReference.Width),
+            (int)(pointInOldSystem.Y / (float)oldSystemCoords.Y * _canvasReference.Height)
+            );
     }
 
     private async Task DrawCircle(Point location)
