@@ -53,26 +53,28 @@ namespace DiseaseCore
 
                         // Make entities sick if they need to
                         // TODO FINISH THIS AS THIS IS NOT WORKING
-                        // var toBeSick = populationHealthy
-                        //     .Where(h =>
-                        //         {
-                        //             return populationSick
-                        //                 .Any(s => EntityOnMap.IsIntersecting(s.location, 5, h.location, 5));
-                        //         })
-                        //     .Select((x, idx) =>
-                        //         {
-                        //             x.entity = SickEntity.ConvertToSick((HealthyEntity)x.entity);
-                        //             return x;
-                        //         })
-                        //     .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
-                        //         {
-                        //             aggregate.Item1.Add(item.ID);
-                        //             aggregate.Item2.Add(item);
-                        //             return aggregate;
-                        //         })
-                        //     .ToTuple();
-                        // populationHealthy = populationHealthy.Where(x => toBeSick.Item1.Contains(x.ID)).ToList();
-                        // populationSick.AddRange(toBeSick.Item2);
+                        var toBeSick = populationHealthy
+                            .Where(h =>
+                                {
+                                    // Only keep entries that are intersecting with sick people
+                                    return populationSick
+                                        .Any(s => EntityOnMap.IsIntersecting(s.location, 5, h.location, 5));
+                                })
+                            .Select((x, idx) =>
+                                {
+                                    // Covert to sick entities
+                                    x.entity = SickEntity.ConvertToSick((HealthyEntity)x.entity);
+                                    return x;
+                                })
+                            .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
+                                {
+                                    aggregate.Item1.Add(item.ID);
+                                    aggregate.Item2.Add(item);
+                                    return aggregate;
+                                })
+                            .ToTuple();
+                        populationHealthy = populationHealthy.Where(x => !toBeSick.Item1.Contains(x.ID)).ToList();
+                        populationSick.AddRange(toBeSick.Item2);
 
 
                         // TODO Split this coded into functions to remove duplicate code
