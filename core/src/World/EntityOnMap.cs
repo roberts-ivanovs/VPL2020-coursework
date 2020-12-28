@@ -1,3 +1,4 @@
+using System;
 using System.Drawing;
 
 namespace DiseaseCore
@@ -17,6 +18,15 @@ namespace DiseaseCore
 
             this.location = location;
             this.entity = entity;
+        }
+
+        static internal bool IsIntersecting(
+            Point objectOneCenter, ushort objectOneRadius,
+            Point objectTwoCenter, ushort objectTwoRadius
+        )
+        {
+            Point pNew = new Point(objectOneCenter.X - objectTwoCenter.X, objectOneCenter.Y - objectTwoCenter.Y);
+            return ((pNew.X * pNew.X) + (pNew.Y * pNew.Y)) <= Math.Pow(objectOneRadius + objectTwoRadius, 2);
         }
     }
 

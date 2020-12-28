@@ -9,7 +9,8 @@ namespace DiseaseCore
     internal class Region
     {
         private Mutex populationAccess = new Mutex();
-        private List<EntityOnMap> population = new List<EntityOnMap>();
+        private List<EntityOnMap> populationSick = new List<EntityOnMap>();
+        private List<EntityOnMap> populationHealthy = new List<EntityOnMap>();
 
         public Mutex inboundAccess = new Mutex();
         public List<EntityOnMap> inbound = new List<EntityOnMap>();
@@ -21,13 +22,11 @@ namespace DiseaseCore
         public SimulationState SimState { get; set; }
 
         public Region(
-            List<EntityOnMap> population,
             Func<EntityOnMap, bool> entityMustLeave,
             Func<List<EntityOnMap>, bool> upperPassEntities
         )
         {
             this.SimState = SimulationState.PAUSED;
-            this.population = population;
             this.entityMustLeave = entityMustLeave;
             this.upperPassEntities = upperPassEntities;
         }
@@ -45,17 +44,64 @@ namespace DiseaseCore
                     {
                         var current = sw.ElapsedMilliseconds;
                         var timeDeltaMS = (ulong)((current - previous) * timeScale);
-                        population = population
+                        populationSick = populationSick
                             .Select(x => SimulateSubset(ref x, timeDeltaMS))
                             .ToList();
-                        // TODO: Make entities sick if they need to
+                        populationHealthy = populationHealthy
+                            .Select(x => SimulateSubset(ref x, timeDeltaMS))
+                            .ToList();
+
+                        // Make entities sick if they need to
+                        // TODO FINISH THIS AS THIS IS NOT WORKING
+                        // var toBeSick = populationHealthy
+                        //     .Where(h =>
+                        //         {
+                        //             return populationSick
+                        //                 .Any(s => EntityOnMap.IsIntersecting(s.location, 5, h.location, 5));
+                        //         })
+                        //     .Select((x, idx) =>
+                        //         {
+                        //             x.entity = SickEntity.ConvertToSick((HealthyEntity)x.entity);
+                        //             return x;
+                        //         })
+                        //     .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
+                        //         {
+                        //             aggregate.Item1.Add(item.ID);
+                        //             aggregate.Item2.Add(item);
+                        //             return aggregate;
+                        //         })
+                        //     .ToTuple();
+                        // populationHealthy = populationHealthy.Where(x => toBeSick.Item1.Contains(x.ID)).ToList();
+                        // populationSick.AddRange(toBeSick.Item2);
 
 
+                        // TODO Split this coded into functions to remove duplicate code
                         // Perform entity removal that have left the region
-                        var toRemove = population.Where(x => entityMustLeave(x)).ToList();
-                        if (upperPassEntities(toRemove))
+                        var toRemoveHealthy = populationHealthy
+                            .Where(x => entityMustLeave(x))
+                            .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
                         {
-                            population = population.Where(x => !toRemove.Contains(x)).ToList();
+                            aggregate.Item1.Add(item.ID);
+                            aggregate.Item2.Add(item);
+                            return aggregate;
+                        }).ToTuple();
+                        var toRemoveSick = populationSick
+                            .Where(x => entityMustLeave(x))
+                            .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
+                        {
+                            aggregate.Item1.Add(item.ID);
+                            aggregate.Item2.Add(item);
+                            return aggregate;
+                        }).ToTuple();
+
+                        if (toRemoveSick.Item1.Count() > 0 && upperPassEntities(toRemoveSick.Item2))
+                        {
+                            populationSick = populationSick.Where(x => !toRemoveSick.Item1.Contains(x.ID)).ToList();
+                        };
+
+                        if (toRemoveHealthy.Item1.Count() > 0 && upperPassEntities(toRemoveHealthy.Item2))
+                        {
+                            populationHealthy = populationHealthy.Where(x => !toRemoveHealthy.Item1.Contains(x.ID)).ToList();
                         };
 
                         ReadFromInbound();
@@ -75,17 +121,17 @@ namespace DiseaseCore
             // Perform entity addition that have entered the region
             if (inboundAccess.WaitOne() && populationAccess.WaitOne())
             {
-                population.AddRange(inbound);
+                var items = sortEntities(inbound);
+                populationSick.AddRange(items.Item1);
+                populationHealthy.AddRange(items.Item2);
+
                 inbound.Clear();
                 inboundAccess.ReleaseMutex();
                 populationAccess.ReleaseMutex();
             }
             else
             {
-                // if (inbound.Count() > 0)
-                // {
                 Console.WriteLine($"Couldnt access inbound lock! items - {inbound.Count()}");
-                // }
             }
         }
 
@@ -108,24 +154,36 @@ namespace DiseaseCore
             return ref item;
         }
 
-        public List<EntityOnMap> getEntities()
+        public (List<EntityOnMap>, List<EntityOnMap>) getEntities()
         {
             SimState = SimulationState.PAUSED;
-            List<EntityOnMap> res;
+            (List<EntityOnMap>, List<EntityOnMap>) res;
             if (populationAccess.WaitOne())
             {
 
                 ReadFromInbound();
-                res = population;
+                res = (populationSick, populationHealthy);
                 populationAccess.ReleaseMutex();
             }
             else
             {
-                Console.WriteLine("Regioun public API couldnt get population lock");
-                res = new List<EntityOnMap>();
+                throw new Exception("Region public API couldnt get population lock");
             }
             SimState = SimulationState.RUNNING;
             return res;
+        }
+
+
+        internal static (List<EntityOnMap>, List<EntityOnMap>) sortEntities(List<EntityOnMap> inbound)
+        {
+            var res1 = inbound
+                .Where(x => x.entity is SickEntity)
+                .ToList();
+            var res2 = inbound
+                .Where(x => x.entity is HealthyEntity)
+                .ToList();
+
+            return (res1, res2);
         }
     }
 }

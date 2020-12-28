@@ -8,10 +8,12 @@ namespace DiseaseCore
         /* Static initializers */
         protected readonly Random rnd = new Random();
         public Vector3 direction { get; set; }
+        internal ushort age { get; set; }
 
         public AbstractEntity()
         {
             direction = new Vector3(rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
+            age = (ushort)rnd.Next(1, 70);
         }
         public virtual void Tick(ulong milliseconds)
         {

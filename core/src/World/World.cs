@@ -90,7 +90,6 @@ namespace DiseaseCore
                 int localMaxX = i * deltaX + deltaX;
                 int localMinX = i * deltaX;
                 regionManagers[i] = new Region(
-                    new List<EntityOnMap>(),
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
@@ -187,7 +186,7 @@ namespace DiseaseCore
                     waitingData[procIndex] = new Task(() =>
                     {
                         var item = regionManagers[procIndex].getEntities();
-                        population[procIndex] = item;
+                        population[procIndex] = item.Item1.Concat(item.Item2).ToList();
                     });
                     waitingData[procIndex].Start();
                 }
@@ -197,11 +196,6 @@ namespace DiseaseCore
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
             ).ToList();
-            // if (outOfBoundsLock.WaitOne())
-            // {
-            //     returnable.AddRange(this.outOfBoundsPopulation);
-            //     outOfBoundsLock.ReleaseMutex();
-            // }
 
             this.SimState = SimulationState.RUNNING;
             for (int i = 0; i < regionManagers.Length; ++i)
@@ -236,6 +230,7 @@ namespace DiseaseCore
 
         private void SyncTaskCode()
         {
+            // TODO Fix issue when an entity is jumping threads then it is not being counted. Not sure where exactly.
             int deltaX = MaxCoords.X / NumberOfCores;
             if (outOfBoundsLock.WaitOne())
             {
