@@ -29,7 +29,7 @@ namespace DiseaseCore
         private static Random rnd = new Random();
 
         /* Map bounds */
-        public readonly static Point MaxCoords = new Point(1000, 1000);
+        public readonly static Point MaxCoords = new Point(5000, 5000);
 
         /* Non defining game state values */
         private ushort initialHealthy { get; }
@@ -168,7 +168,7 @@ namespace DiseaseCore
 
         public GameState GetCurrentState()
         {
-            SyncTaskCode();
+            // SyncTaskCode();
             // TODO Fix issue when an entity is jumping threads then it is not being counted. Not sure where exactly.
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
@@ -193,6 +193,7 @@ namespace DiseaseCore
                 }
                 Task.WaitAll(waitingData);
             }
+            SyncTaskCode();
 
             outOfBoundsLock.WaitOne();
             var returnable = population.Aggregate(
@@ -250,20 +251,7 @@ namespace DiseaseCore
                 {
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
-                    // Perform X axis wrapping
-                    if (index >= regionManagers.Length)
-                    {
-                        // var newLocX = deltaX - (item.location.X / deltaX) ;
-                        item.location.X = 0;
-                        index = 0;
-                    }
-                    else if (index < 0)
-                    {
-                        // var newLocX = MaxCoords.X - item.location.X;
-                        item.location.X = MaxCoords.X;
-                        index = regionManagers.Length - 1;
-
-                    }
+                    index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
                     inbound[index].Add(item);
                 }
 

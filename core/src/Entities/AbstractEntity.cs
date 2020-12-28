@@ -12,6 +12,7 @@ namespace DiseaseCore
 
         public AbstractEntity()
         {
+            // direction = new Vector3(-1, 0, 0);
             direction = new Vector3(rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
             age = (ushort)rnd.Next(1, 70);
         }

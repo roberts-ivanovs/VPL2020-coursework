@@ -144,21 +144,14 @@ namespace DiseaseCore
             item.location.X += (int)velocity.X;
             item.location.Y += (int)velocity.Y;
 
-            // Perform Y axis wrapping
-            if ((uint)item.location.Y >= World.MaxCoords.Y)
-            {
-                item.location.Y = 0;
-            }
-            else if ((uint)item.location.Y <= 0)
-            {
-                item.location.Y = World.MaxCoords.Y;
-            }
+            // Perform X Y axis boundary check
+            item.location.Y = Math.Min(Math.Max(item.location.Y, 0), World.MaxCoords.Y);
+            item.location.X = Math.Min(Math.Max(item.location.X, 0),  World.MaxCoords.X);
             return ref item;
         }
 
         public (List<EntityOnMap>, List<EntityOnMap>) getEntities()
         {
-            SimState = SimulationState.PAUSED;
             (List<EntityOnMap>, List<EntityOnMap>) res;
             if (populationAccess.WaitOne())
             {
@@ -171,7 +164,6 @@ namespace DiseaseCore
             {
                 throw new Exception("Region public API couldnt get population lock");
             }
-            SimState = SimulationState.RUNNING;
             return res;
         }
 
