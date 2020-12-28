@@ -169,6 +169,7 @@ namespace DiseaseCore
         public GameState GetCurrentState()
         {
             SyncTaskCode();
+            // TODO Fix issue when an entity is jumping threads then it is not being counted. Not sure where exactly.
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
             {
@@ -192,10 +193,13 @@ namespace DiseaseCore
                 }
                 Task.WaitAll(waitingData);
             }
+
+            outOfBoundsLock.WaitOne();
             var returnable = population.Aggregate(
                 new List<EntityOnMap>(),
                 (current, next) => { current.AddRange(next); return current; }
-            ).ToList();
+            ).Concat(outOfBoundsPopulation).ToList();
+            outOfBoundsLock.ReleaseMutex();
 
             this.SimState = SimulationState.RUNNING;
             for (int i = 0; i < regionManagers.Length; ++i)
@@ -230,7 +234,6 @@ namespace DiseaseCore
 
         private void SyncTaskCode()
         {
-            // TODO Fix issue when an entity is jumping threads then it is not being counted. Not sure where exactly.
             int deltaX = MaxCoords.X / NumberOfCores;
             if (outOfBoundsLock.WaitOne())
             {
