@@ -20,6 +20,9 @@ namespace DiseaseCore
 
         /* Game defining state */
         public SimulationState SimState { get; set; }
+        internal float timeScale { get; set; }
+
+        private int baseRadius = 5;
 
         public Region(
             Func<EntityOnMap, bool> entityMustLeave,
@@ -31,7 +34,7 @@ namespace DiseaseCore
             this.upperPassEntities = upperPassEntities;
         }
 
-        public void StartLooping(float timeScale)
+        public void StartLooping()
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -52,13 +55,26 @@ namespace DiseaseCore
                             .ToList();
 
                         // Make entities sick if they need to
-                        // TODO FINISH THIS AS THIS IS NOT WORKING
+                        /*
+                        NOTE: Because the timeScale parameter removes "frames"
+                        and possible intersections (no interpolation is being
+                        done as it's quite intensive to do at real time),
+                        the code tries to compensate by increasing the radius.
+                        Because we don't want everyone to become sick immediately,
+                        then linear scaling is not possible. Using this
+                        (https://www.desmos.com/calculator/7agyg8rqqz) for
+                        trying out some things.
+                        */
+                        var radius = (ushort)(baseRadius * (Math.Log10(timeScale) + timeScale/ 5));
                         var toBeSick = populationHealthy
                             .Where(h =>
                                 {
                                     // Only keep entries that are intersecting with sick people
                                     return populationSick
-                                        .Any(s => EntityOnMap.IsIntersecting(s.location, 5, h.location, 5));
+                                        .Any(s => EntityOnMap.IsIntersecting(
+                                            s.location, radius,
+                                            h.location, radius)
+                                        );
                                 })
                             .Select((x, idx) =>
                                 {
@@ -96,13 +112,9 @@ namespace DiseaseCore
                             return aggregate;
                         }).ToTuple();
 
-                        if (toRemoveSick.Item1.Count() > 0 && upperPassEntities(toRemoveSick.Item2))
+                        if (toRemoveSick.Item1.Count() > 0 && upperPassEntities(toRemoveSick.Item2.Concat(toRemoveHealthy.Item2).ToList()))
                         {
                             populationSick = populationSick.Where(x => !toRemoveSick.Item1.Contains(x.ID)).ToList();
-                        };
-
-                        if (toRemoveHealthy.Item1.Count() > 0 && upperPassEntities(toRemoveHealthy.Item2))
-                        {
                             populationHealthy = populationHealthy.Where(x => !toRemoveHealthy.Item1.Contains(x.ID)).ToList();
                         };
 

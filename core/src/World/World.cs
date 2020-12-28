@@ -34,7 +34,7 @@ namespace DiseaseCore
         /* Non defining game state values */
         private ushort initialHealthy { get; }
         private ushort initialSick { get; }
-        private float timeScale { get; set; }
+        public float timeScale { get; set; }
 
         // Using 2/3 of the computer cores. The other 1/3 is used for UI
         // rendering, server handling, etc.
@@ -93,12 +93,8 @@ namespace DiseaseCore
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
+                regionManagers[i].timeScale = timeScale;
             }
-        }
-
-        public SimulationState GetState()
-        {
-            return SimState;
         }
 
         private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
@@ -131,7 +127,7 @@ namespace DiseaseCore
                 item.SimState = SimulationState.RUNNING;
                 tasks[procIndex] = new Task(() =>
                 {
-                    item.StartLooping(this.timeScale);
+                    item.StartLooping();
                 });
                 tasks[i].Start();
             }
@@ -187,6 +183,7 @@ namespace DiseaseCore
                     waitingData[procIndex] = new Task(() =>
                     {
                         var item = regionManagers[procIndex].getEntities();
+                        regionManagers[procIndex].timeScale = timeScale;  // Update time scale!
                         population[procIndex] = item.Item1.Concat(item.Item2).ToList();
                     });
                     waitingData[procIndex].Start();

@@ -1,6 +1,4 @@
 ﻿@page "/"
-@using System.Threading
-@using System.Linq
 @using System.Diagnostics
 
 <h1>Simulation</h1>
@@ -37,7 +35,7 @@
                     Time Scale = @TimeScale
                 </div>
                 <div>
-                    <input type="range" min="0" max="100" step="0.1" disabled="@(!inputsEnabled)" @bind="TimeScale"
+                    <input type="range" min="0" max="100" step="0.1" @bind="TimeScale"
                         @bind:event="oninput" />
                 </div>
             </div>
@@ -117,6 +115,7 @@
                 {
                     before = now;
                     var gameState = simulation.GetCurrentState();
+                    simulation.timeScale = TimeScale;
                     await _statistics.setNewData(gameState.sickPeople, gameState.healthyPeople);
                     await EntityCanvas.DisplayItems(gameState.items);
                 }
