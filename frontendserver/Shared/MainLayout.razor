@@ -1,18 +1,26 @@
 @inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<header>
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <NavLink class="navbar-brand" href="" Match="NavLinkMatch.All">
+        <span class="oi oi-timer" aria-hidden="true"></span> Simulation
+    </NavLink>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <NavLink class="nav-link" href="about">
+            <span class="oi oi-info" aria-hidden="true"></span> About
+        </NavLink>
+      </div>
     </div>
-
-    <div class="main">
-
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
-
-        <div class="content px-4">
-            @Body
-        </div>
+  </div>
+</nav>
+</header>
+<main>
+    <div class="container pt-3">
+        @Body
     </div>
-</div>
+</main>

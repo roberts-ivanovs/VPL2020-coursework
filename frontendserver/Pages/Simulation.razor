@@ -1,59 +1,92 @@
 ﻿@page "/"
 @using System.Diagnostics
 
-<h1>Simulation</h1>
+<div class="row">
+    <div class="col">
+        <h1>Simulation</h1>
+        <p>Perform a simple disease transimssion simulation </p>
+    </div>
+</div>
+<div class="row">
+    <div class="col-4">
+        <div class="card">
+            <div class="card-header">
+                Settings
+            </div>
+            <div class="container-fluid mx-auto pt-3 pb-3">
+                <div>
+                    <div>
+                        Initial population = @InitialPopulation
+                    </div>
+                    <div>
+                        <input type="range" min="0" max="500" step="1" disabled="@(!inputsEnabled)"
+                            class="form-range" @bind="InitialPopulation" @bind:event="oninput"
+                            @onchange="HandleGlobalPopulationChange" />
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        Initial sick people = @InitialSickPeople / @InitialPopulation
+                    </div>
+                    <div>
+                        <input type="range" min="0" max="@InitialPopulation" step="1" disabled="@(!inputsEnabled)"
+                            class="form-range" @bind="InitialSickPeople" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div>
+                    <div>
+                        Time Scale = @TimeScale
+                    </div>
+                    <div>
+                        <input type="range" min="0" max="5" step="0.1" @bind="TimeScale" class="form-range"
+                            @bind:event="oninput" />
+                    </div>
+                </div>
+                <hr/>
+                <div>
+                    <p>Number of cores <b> @(simulation == null ? "unknown" : World.NumberOfCores.ToString()) </b> </p>
+                </div>
+                <hr/>
+                <div class="d-grid gap-2">
+                    <button type="button" @onclick="StartSimulation" disabled="@(!startButtonEnabled)"
+                        class="btn @(startButtonEnabled ? "btn-success" : "btn-secondary")">
+                        <span class="oi oi-media-play">
+                            START
+                        </span>
+                    </button>
+                    <button type="button" @onclick="StopSimulation" disabled="@(!stopButtonEnabled)"
+                        class="btn @(stopButtonEnabled ? "btn-danger" : "btn-secondary")">
+                        <span class="oi oi-media-stop">
+                            STOP
+                        </span>
+                    </button>
+                </div>
 
-<p>Perform a simple simulation of the COVID disease </p>
-
-<div class="container">
-    <div class="row">
-        <div class="col-8">
-            <Canvas @ref="EntityCanvas" />
+            </div>
         </div>
+        <div class="card mt-3">
+            <div class="card-header">
+                Statistics
+            </div>
+            <div class="card-body">
+                <Statistics @ref="_statistics" />
+            </div>
+        </div>
+    </div>
 
-        <div class="col-4">
-            <div>
-                <div>
-                    Initial population = @InitialPopulation
-                </div>
-                <div>
-                    <input type="range" min="0" max="500" step="1" disabled="@(!inputsEnabled)"
-                        @bind="InitialPopulation" @bind:event="oninput" @onchange="HandleGlobalPopulationChange" />
-                </div>
+
+    <div class="col-8">
+        <div class="card">
+            <div class="card-header">
+                Canvas
             </div>
-            <div>
-                <div>
-                    Initial sick people = @InitialSickPeople / @InitialPopulation
-                </div>
-                <div>
-                    <input type="range" min="0" max="@InitialPopulation" step="1" disabled="@(!inputsEnabled)"
-                        @bind="InitialSickPeople" @bind:event="oninput" />
-                </div>
+            <div class="card-body mx-auto">
+                <Canvas @ref="EntityCanvas" />
             </div>
-            <div>
-                <div>
-                    Time Scale = @TimeScale
-                </div>
-                <div>
-                    <input type="range" min="0" max="5" step="0.1" @bind="TimeScale"
-                        @bind:event="oninput" />
-                </div>
-            </div>
-            <div>
-                <p>Number of cores @(simulation == null ? "unknown" : World.NumberOfCores.ToString())</p>
-            </div>
-            <div>
-                <button type="button" @onclick="StartSimulation" disabled="@(!startButtonEnabled)">
-                    START
-                </button>
-                <button type="button" @onclick="StopSimulation" disabled="@(!stopButtonEnabled)">
-                    STOP
-                </button>
-            </div>
-            <Statistics @ref="_statistics" />
         </div>
     </div>
 </div>
+
 
 @code {
     private World simulation;
