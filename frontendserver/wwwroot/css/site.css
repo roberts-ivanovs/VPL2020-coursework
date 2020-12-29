@@ -42,9 +42,44 @@ a, .btn-link {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+
+/* Override Bootstrap styling */
+.card-header {
+    background-color: #145b22;
+    color: white;
+}
+
+.bg-light {
+    background-color: #145b22 !important;
+    color: white !important;
+}
+
+.navbar-light .navbar-brand {
+    color: white !important;
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: white !important;
+}
+
+.fixed-bottom {
+    background-color: #145b22;
+    color: white;
+}
+
+.source-code {
+    color: white;
+    text-decoration: none;
+}
+
+.source-code:hover {
+    color: white;
+    text-decoration: none;
+}
