@@ -52,12 +52,12 @@ a, .btn-link {
 
 /* Override Bootstrap styling */
 .card-header {
-    background-color: #145b22;
+    background-color: #7ba576;
     color: white;
 }
 
 .bg-light {
-    background-color: #145b22 !important;
+    background-color: #7ba576 !important;
     color: white !important;
 }
 
@@ -70,7 +70,7 @@ a, .btn-link {
 }
 
 .fixed-bottom {
-    background-color: #145b22;
+    background-color: #7ba576;
     color: white;
 }
 
