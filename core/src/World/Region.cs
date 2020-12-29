@@ -20,10 +20,11 @@ namespace DiseaseCore
 
         /* Game defining state */
         public SimulationState SimState { get; set; }
-        internal float timeScale { get; set; }
+        internal float timeScaleNumber;
 
         private int baseRadius = World.MaxCoords.X / 100;
 
+        private List<Pipeline> pipelines = new List<Pipeline>();
         public Region(
             Func<EntityOnMap, bool> entityMustLeave,
             Func<List<EntityOnMap>, bool> upperPassEntities
@@ -32,6 +33,23 @@ namespace DiseaseCore
             this.SimState = SimulationState.PAUSED;
             this.entityMustLeave = entityMustLeave;
             this.upperPassEntities = upperPassEntities;
+            pipelines.Add(new DeathPipeline());
+            pipelines.Add(new InfectionPipeline(timeScaleNumber));
+            pipelines.Add(new GravityPipeline());
+            pipelines.Add(new SickRepulsivePipeline());
+            // pipelines.Add(new RecoveryPipeline());
+        }
+
+        public void timeScale(float timeScale)
+        {
+            timeScaleNumber = timeScale;
+            foreach (var p in pipelines)
+            {
+                if (p is InfectionPipeline)
+                {
+                    ((InfectionPipeline)p).updateRadius(timeScale);
+                }
+            }
         }
 
         public void StartLooping()
@@ -46,7 +64,7 @@ namespace DiseaseCore
                     if (populationAccess.WaitOne())
                     {
                         var current = sw.ElapsedMilliseconds;
-                        var timeDeltaMS = (ulong)((current - previous) * timeScale);
+                        var timeDeltaMS = (ulong)((current - previous) * timeScaleNumber);
                         populationSick = populationSick
                             .Select(x => SimulateSubset(ref x, timeDeltaMS))
                             .ToList();
@@ -73,6 +91,7 @@ namespace DiseaseCore
                             aggregate.Item2.Add(item);
                             return aggregate;
                         }).ToTuple();
+
                         var toRemoveSick = populationSick
                             .Where(x => entityMustLeave(x))
                             .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
@@ -82,7 +101,7 @@ namespace DiseaseCore
                             return aggregate;
                         }).ToTuple();
 
-                        if (toRemoveSick.Item1.Count() > 0 && upperPassEntities(toRemoveSick.Item2.Concat(toRemoveHealthy.Item2).ToList()))
+                        if ((toRemoveSick.Item1.Count() > 0 || toRemoveHealthy.Item1.Count() > 0) && upperPassEntities(toRemoveSick.Item2.Concat(toRemoveHealthy.Item2).ToList()))
                         {
                             populationSick = populationSick.Where(x => !toRemoveSick.Item1.Contains(x.ID)).ToList();
                             populationHealthy = populationHealthy.Where(x => !toRemoveHealthy.Item1.Contains(x.ID)).ToList();
