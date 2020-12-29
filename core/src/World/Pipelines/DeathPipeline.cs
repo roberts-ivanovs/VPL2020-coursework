@@ -10,7 +10,7 @@ namespace DiseaseCore
         PipelineReturnData Pipeline.pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy) => new PipelineReturnData
         {
             newHealthy = currentHealthy,
-            newSick = currentSick.Where(x => ((SickEntity)x.entity).health > 0.1).ToList(),
+            newSick = currentSick.Where(x => ((SickEntity)x.entity).health > 0).ToList(),
         };
 
     }
