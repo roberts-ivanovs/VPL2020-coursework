@@ -56,7 +56,6 @@ namespace DiseaseCore
                                     return aggregate;
                                 })
                             .ToTuple();
-            Console.WriteLine($"Infection ppline {toBeSick.Item2.Count()}");
             return new PipelineReturnData
             {
                 newHealthy = currentHealthy.Where(x => !toBeSick.Item1.Contains(x.ID)).ToList(),
