@@ -18,13 +18,14 @@ namespace DiseaseCore
         }
         public virtual void Tick(ulong milliseconds)
         {
-            // 1/100 chance to get a new direction
-            var val = rnd.Next(100);
+            // 1/500 chance to get a new direction
+            var val = rnd.Next(500);
             if (val == 0)
             {
                 direction = new Vector3(rnd.Next(-1, 2), rnd.Next(-1, 2), 0);
             }
-            else if (val < 10)
+            // 1/500 chance to not move
+            else if (val == 1)
             {
                 direction = new Vector3(0, 0, 0);
             }

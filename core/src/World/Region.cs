@@ -22,7 +22,7 @@ namespace DiseaseCore
         public SimulationState SimState { get; set; }
         internal float timeScale { get; set; }
 
-        private int baseRadius = 5;
+        private int baseRadius = World.MaxCoords.X / 100;
 
         public Region(
             Func<EntityOnMap, bool> entityMustLeave,
