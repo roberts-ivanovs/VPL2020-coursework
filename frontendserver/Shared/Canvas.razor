@@ -27,8 +27,13 @@
         // Clear canvas
         await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
         // Render new items
-        await DrawItems(entitiesSorted.Item1, "red");
+        var sickGood = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.5).ToList();
+        var sickBad = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5).ToList();
+        var sickAlmostDead = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health < 0.1).ToList();
         await DrawItems(entitiesSorted.Item2, "green");
+        await DrawItems(sickGood, "#ED422C");
+        await DrawItems(sickBad, "#F48D80");
+        await DrawItems(sickAlmostDead, "#FBD9D4");
 
     }
 
