@@ -2,6 +2,13 @@
 
 ![Canvas screenshot](docs/canvas.png)
 
+
+## Run project
+
+Make sure to have `dotnet 5.0` installed. Execute the startup script:
+
+    ./start.sh
+
 ## What is this?
 
 A project created using serverside rendering Blazor for the Visual
