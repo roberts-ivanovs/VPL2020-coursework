@@ -93,7 +93,7 @@ namespace DiseaseCore
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
-                regionManagers[i].timeScale = timeScale;
+                regionManagers[i].timeScale(timeScale);
             }
         }
 
@@ -164,8 +164,6 @@ namespace DiseaseCore
 
         public GameState GetCurrentState()
         {
-            // SyncTaskCode();
-            // TODO Fix issue when an entity is jumping threads then it is not being counted. Not sure where exactly.
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
             {
@@ -183,7 +181,7 @@ namespace DiseaseCore
                     waitingData[procIndex] = new Task(() =>
                     {
                         var item = regionManagers[procIndex].getEntities();
-                        regionManagers[procIndex].timeScale = timeScale;  // Update time scale!
+                        regionManagers[procIndex].timeScale(timeScale);  // Update time scale!
                         population[procIndex] = item.Item1.Concat(item.Item2).ToList();
                     });
                     waitingData[procIndex].Start();
