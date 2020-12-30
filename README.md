@@ -1,5 +1,10 @@
 # Disease simulator
 
+    Author: Roberts Ivanovs
+    Project type: Final Course Project for Visual Programming Languages 2020
+    Project name: Disease simulator
+    E-mail: robertsivanovs1999@gmail.com
+
 ![Canvas screenshot](docs/canvas.png)
 
 
