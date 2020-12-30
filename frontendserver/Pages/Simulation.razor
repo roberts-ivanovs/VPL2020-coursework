@@ -42,9 +42,18 @@
                             @bind:event="oninput" />
                     </div>
                 </div>
+                <div>
+                    <div>
+                        Canvas refresh rate = @renderCanvasAfterEveryMiliseconds (ms)
+                    </div>
+                    <div>
+                        <input type="range" min="10" max="1000" step="10" @bind="renderCanvasAfterEveryMiliseconds" class="form-range"
+                            @bind:event="oninput" />
+                    </div>
+                </div>
                 <hr/>
                 <div>
-                    <p>Number of cores <b> @(simulation == null ? "unknown" : World.NumberOfCores.ToString()) </b> </p>
+                    <p>Number of cores <b> @(simulation == null ? "unknown" : this.simulation.NumberOfCores.ToString()) </b> </p>
                 </div>
                 <hr/>
                 <div class="d-grid gap-2">
@@ -97,7 +106,7 @@
     private bool startButtonEnabled { get; set; } = true;
     private bool inputsEnabled { get; set; } = true;
 
-    private int renderCanvasAfterEveryMiliseconds { get; } = 100;
+    private int renderCanvasAfterEveryMiliseconds { get; set;} = 50;
     private Canvas EntityCanvas;
     private Statistics _statistics;
 
@@ -114,11 +123,12 @@
 
     async void StartSimulation()
     {
-        simulation = new World((ushort)(InitialPopulation - InitialSickPeople), InitialSickPeople, TimeScale);
+        simulation = new World((ushort)(InitialPopulation - InitialSickPeople), InitialSickPeople, TimeScale, true);
         simulation.Start();
         stopButtonEnabled = true;
         startButtonEnabled = false;
         inputsEnabled = false;
+        _statistics.initialPeople = InitialPopulation;
         await ReloadInformation();
     }
 

@@ -35,9 +35,8 @@ namespace DiseaseCore
             this.upperPassEntities = upperPassEntities;
             pipelines.Add(new DeathPipeline());
             pipelines.Add(new InfectionPipeline(timeScaleNumber));
-            pipelines.Add(new GravityPipeline());
-            pipelines.Add(new SickRepulsivePipeline());
-            // pipelines.Add(new RecoveryPipeline());
+            pipelines.Add(new ZombieModePipeline());
+            pipelines.Add(new RecoveryPipeline());
         }
 
         public void timeScale(float timeScale)
@@ -146,8 +145,8 @@ namespace DiseaseCore
             item.location.Y += (int)velocity.Y;
 
             // Perform X Y axis boundary check
-            item.location.Y = Math.Min(Math.Max(item.location.Y, 0), World.MaxCoords.Y);
-            item.location.X = Math.Min(Math.Max(item.location.X, 0),  World.MaxCoords.X);
+            item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
+            item.location.X = Math.Min(Math.Max(item.location.X, 1),  World.MaxCoords.X - 1);
             return ref item;
         }
 

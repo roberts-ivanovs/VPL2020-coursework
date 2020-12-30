@@ -4,17 +4,27 @@
 <div>
     Healthy people <b> @(healthyPeople) </b>
 </div>
+<div>
+    Initial people <b> @(initialPeople) </b>
+</div>
+<div>
+    Current total people <b> @(currentTotalPeople) </b>
+</div>
 
 
 
 @code {
     public ushort sickPeople  = 0;
     public ushort healthyPeople = 0;
+    public ushort initialPeople { get; set; } = 0;
+    public ushort currentTotalPeople = 0;
 
     public async Task setNewData(ushort newSickPeople, ushort newHealthyPeople)
     {
         this.sickPeople = newSickPeople;
         this.healthyPeople = newHealthyPeople;
+
+        currentTotalPeople = (ushort)(newSickPeople + newHealthyPeople);
         await InvokeAsync(StateHasChanged);
     }
 }

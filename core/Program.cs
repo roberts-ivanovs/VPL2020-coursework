@@ -8,7 +8,7 @@ namespace coursework
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-            World simulation = new World(95, 5, 1.0f);
+            World simulation = new World(95, 5, 1.0f, false);
             Console.WriteLine("Starting!");
             simulation.Start();
             var res = simulation.GetCurrentState();

@@ -39,7 +39,7 @@ namespace DiseaseCore
         // Using 2/3 of the computer cores. The other 1/3 is used for UI
         // rendering, server handling, etc.
         // WARNING: Remove the arithmetic below and watch your computer incenerate
-        public static int NumberOfCores { get; } = Environment.ProcessorCount * 2 / 3;
+        public int NumberOfCores { get; set; }
 
 
         /* Live population accessors  */
@@ -52,8 +52,9 @@ namespace DiseaseCore
         private Task syncTask;
         private SimulationState SimState;
 
-        public World(ushort initialHealthy, ushort initialSick, float timeScale)
+        public World(ushort initialHealthy, ushort initialSick, float timeScale, bool singleCore)
         {
+            this.NumberOfCores = singleCore ? 1 : Environment.ProcessorCount * 2 / 3;
             this.initialHealthy = initialHealthy;
             this.initialSick = initialSick;
             this.timeScale = timeScale;
@@ -244,6 +245,9 @@ namespace DiseaseCore
                 // figure out where should each item be placed
                 foreach (var item in outOfBoundsPopulation)
                 {
+                    // Normalise the location
+                    item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
+                    item.location.X = Math.Min(Math.Max(item.location.X, 1),  World.MaxCoords.X - 1);
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
                     index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);

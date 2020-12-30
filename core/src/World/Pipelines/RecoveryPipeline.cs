@@ -10,7 +10,6 @@ namespace DiseaseCore
     {
         PipelineReturnData Pipeline.pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy)
         {
-            currentSick.ForEach(x => Console.WriteLine($"RECOVERY {((SickEntity)x.entity).recovery}"));
             var newHealthy = currentSick
             .Where(x => ((SickEntity)x.entity).recovery > 1f)
             .Aggregate(new Tuple<List<EntityOnMap>, List<ulong>>(new List<EntityOnMap>(), new List<ulong>()), (aggregate, x) =>
