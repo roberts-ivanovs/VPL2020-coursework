@@ -6,9 +6,9 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    internal class RecoveryPipeline : Pipeline
+    internal class RecoveryPipeline : AbstractPipeline
     {
-        PipelineReturnData Pipeline.pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy)
+        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {
             var newHealthy = currentSick
             .Where(x => ((SickEntity)x.entity).recovery > 1f)

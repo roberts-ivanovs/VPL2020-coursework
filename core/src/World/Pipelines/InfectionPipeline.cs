@@ -6,21 +6,17 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    internal class InfectionPipeline : Pipeline
+    internal class InfectionPipeline : AbstractPipeline
     {
         private ushort radius;
         private int baseRadius = World.MaxCoords.X / 50;
-
-        public InfectionPipeline(float timeScale)
+        public override void updateTimeScale(float timeScale)
         {
-            updateRadius(timeScale);
-        }
-
-        public void updateRadius(float timeScale)
-        {
+            base.updateTimeScale(timeScale);
             this.radius = (ushort)(baseRadius * (Math.Log10(timeScale) + timeScale / 10));
         }
-        PipelineReturnData Pipeline.pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy)
+
+        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {
             // Make entities sick if they need to
             /*

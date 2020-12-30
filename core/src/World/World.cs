@@ -35,10 +35,6 @@ namespace DiseaseCore
         private ushort initialHealthy { get; }
         private ushort initialSick { get; }
         public float timeScale { get; set; }
-
-        // Using 2/3 of the computer cores. The other 1/3 is used for UI
-        // rendering, server handling, etc.
-        // WARNING: Remove the arithmetic below and watch your computer incenerate
         public int NumberOfCores { get; set; }
 
 
@@ -51,9 +47,14 @@ namespace DiseaseCore
         private Task[] tasks;
         private Task syncTask;
         private SimulationState SimState;
+        private List<Pipeline> pipelines = new List<Pipeline>();
 
         public World(ushort initialHealthy, ushort initialSick, float timeScale, bool singleCore)
         {
+
+            // Using 2/3 of the computer cores. The other 1/3 is used for UI
+            // rendering, server handling, your OS, etc.
+            // Remove the arithmetic below and watch your computer INCENERATE.
             this.NumberOfCores = singleCore ? 1 : Environment.ProcessorCount * 2 / 3;
             this.initialHealthy = initialHealthy;
             this.initialSick = initialSick;
@@ -94,8 +95,14 @@ namespace DiseaseCore
                     (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
-                regionManagers[i].timeScale(timeScale);
             }
+
+            pipelines.Add(new TickingPipeline());
+            pipelines.Add(new GeoLocationPipeline());
+            pipelines.Add(new DeathPipeline());
+            pipelines.Add(new InfectionPipeline());
+            pipelines.Add(new ZombieModePipeline());
+            pipelines.Add(new RecoveryPipeline());
         }
 
         private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
@@ -128,7 +135,7 @@ namespace DiseaseCore
                 item.SimState = SimulationState.RUNNING;
                 tasks[procIndex] = new Task(() =>
                 {
-                    item.StartLooping();
+                    item.StartLooping(ref pipelines);
                 });
                 tasks[i].Start();
             }
@@ -168,6 +175,7 @@ namespace DiseaseCore
             this.SimState = SimulationState.PAUSED;
             List<EntityOnMap>[] population;
             {
+                pipelines.ForEach(x => x.updateTimeScale(timeScale));
                 for (int i = 0; i < regionManagers.Length; ++i)
                 {
                     regionManagers[i].SimState = SimulationState.PAUSED;
@@ -182,7 +190,6 @@ namespace DiseaseCore
                     waitingData[procIndex] = new Task(() =>
                     {
                         var item = regionManagers[procIndex].getEntities();
-                        regionManagers[procIndex].timeScale(timeScale);  // Update time scale!
                         population[procIndex] = item.Item1.Concat(item.Item2).ToList();
                     });
                     waitingData[procIndex].Start();
@@ -209,9 +216,12 @@ namespace DiseaseCore
                     new Tuple<List<EntityOnMap>, List<EntityOnMap>>(new List<EntityOnMap>(), new List<EntityOnMap>()),
                     (tuple, item) =>
                     {
-                        if (item.entity is SickEntity) {
+                        if (item.entity is SickEntity)
+                        {
                             tuple.Item1.Add(item);
-                        } else {
+                        }
+                        else
+                        {
                             tuple.Item2.Add(item);
                         }
                         return tuple;
@@ -247,7 +257,7 @@ namespace DiseaseCore
                 {
                     // Normalise the location
                     item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
-                    item.location.X = Math.Min(Math.Max(item.location.X, 1),  World.MaxCoords.X - 1);
+                    item.location.X = Math.Min(Math.Max(item.location.X, 1), World.MaxCoords.X - 1);
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
                     index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);

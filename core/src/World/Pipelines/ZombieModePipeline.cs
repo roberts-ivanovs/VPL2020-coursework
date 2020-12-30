@@ -7,18 +7,19 @@ using System.Numerics;
 namespace DiseaseCore
 {
 
-    internal class ZombieModePipeline : Pipeline
+    internal class ZombieModePipeline : AbstractPipeline
     {
-        // This pipeline will NOT execute always
-        private Random random = new Random();
-
         private static double calculateDistance(int deltaX, int deltaY)
         {
             return Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
         }
-        PipelineReturnData Pipeline.pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy)
+        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {
 
+            // Instantiating here (instead as a class variable), otherwise there
+            // are cases where `random.Next()` returns EQUAL values for multiple
+            // threads
+            Random random = new Random();
             // Find the closest person via Y coordinates and change diraction to match it
             var newSick = currentSick.Select(x =>
             {
