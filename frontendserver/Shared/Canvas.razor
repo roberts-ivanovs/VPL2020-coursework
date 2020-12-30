@@ -30,18 +30,24 @@
         var sickGood = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.5).ToList();
         var sickBad = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5).ToList();
         var sickAlmostDead = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health < 0.1).ToList();
-        await DrawItems(entitiesSorted.Item2, "green");
-        await DrawItems(sickGood, "#ED422C");
-        await DrawItems(sickBad, "#F48D80");
-        await DrawItems(sickAlmostDead, "#FBD9D4");
+        if (entitiesSorted.Item2.Count() > 0) {
+            await DrawItems(entitiesSorted.Item2, "green");
+        }
+        if (sickGood.Count() > 0) {
+            await DrawItems(sickGood, "#ED422C");
+        }
+        if (sickBad.Count() > 0) {
+            await DrawItems(sickBad, "#F48D80");
+        }
+        if (sickAlmostDead.Count() > 0) {
+            await DrawItems(sickAlmostDead, "#FBD9D4");
+        }
 
     }
 
     private async Task DrawItems(List<EntityOnMap> items, string color)
     {
         await this._context.SetFillStyleAsync(color);
-
-
         await this._context.BeginPathAsync();
         items
             .Select(x => NormalizeLocation(World.MaxCoords, x.location))
