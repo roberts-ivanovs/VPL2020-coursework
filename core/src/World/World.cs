@@ -103,6 +103,7 @@ namespace DiseaseCore
             pipelines.Add(new InfectionPipeline());
             pipelines.Add(new ZombieModePipeline());
             pipelines.Add(new RecoveryPipeline());
+            pipelines.Add(new AssertionPipeline());
         }
 
         private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
