@@ -215,7 +215,8 @@
             pipelines.Add(new AssertionPipeline());
         if (healthyAttractorPipeline)
             pipelines.Add(new HealthyAttractorPipeline());
-        @* if (quarantinePipeline) *@
+        if (quarantinePipeline)
+            pipelines.Add(new QuarantinePipeline());
 
 
         /* Construct the World object */
