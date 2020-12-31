@@ -7,11 +7,11 @@ namespace DiseaseCore
     {
         public float recovery = 0f; // 0.0-1.0 | 1.0 being recovered
         public float health = 1f; // 0.0-1.0 | 1.0 being no longer sick
-        private float recoveryRatePerSecond = 0.05f;
+        private float recoveryRatePerSecond = 0.1f;
         private static float DISEASE_BASE_DAMAGE = 0.005f;
         public SickEntity(): base()
         {
-            recoveryRatePerSecond = 1 / this.age;  // The older the person the harder to recover
+            recoveryRatePerSecond = recoveryRatePerSecond / this.age;  // The older the person the harder to recover
         }
 
         public static SickEntity ConvertToSick(HealthyEntity entity)
@@ -31,10 +31,10 @@ namespace DiseaseCore
         override public void Tick(ulong milliseconds)
         {
             base.Tick(milliseconds);
-            recovery += recoveryRatePerSecond * this.age * milliseconds / 1000;
+            recovery += recoveryRatePerSecond * this.age * milliseconds / 1000f;
             if (this.age > 30)
             {
-                health -= DISEASE_BASE_DAMAGE * this.age * milliseconds / 1000;
+                health -= DISEASE_BASE_DAMAGE * this.age * milliseconds / 1000f;
             }
         }
     }

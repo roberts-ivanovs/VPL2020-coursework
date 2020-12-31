@@ -11,7 +11,7 @@ namespace DiseaseCore
         public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {
             var newHealthy = currentSick
-            .Where(x => ((SickEntity)x.entity).recovery > 1f)
+            .Where(x => ((SickEntity)x.entity).recovery >= 1f)
             .Aggregate(new Tuple<List<EntityOnMap>, List<ulong>>(new List<EntityOnMap>(), new List<ulong>()), (aggregate, x) =>
             {
                 x.entity = SickEntity.ConvertToHealthy((SickEntity)x.entity);
