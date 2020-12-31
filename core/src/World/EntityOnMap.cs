@@ -20,13 +20,20 @@ namespace DiseaseCore
             this.entity = entity;
         }
 
-        static internal bool IsIntersecting(
+        internal static bool IsIntersecting(
             Point objectOneCenter, ushort objectOneRadius,
             Point objectTwoCenter, ushort objectTwoRadius
         )
         {
             Point pNew = new Point(objectOneCenter.X - objectTwoCenter.X, objectOneCenter.Y - objectTwoCenter.Y);
             return ((pNew.X * pNew.X) + (pNew.Y * pNew.Y)) <= Math.Pow(objectOneRadius + objectTwoRadius, 2);
+        }
+
+        internal static double calculateDistance(Point first, Point second)
+        {
+            var deltaX = second.X - first.X;
+            var deltaY = second.Y - first.Y;
+            return Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
         }
     }
 
