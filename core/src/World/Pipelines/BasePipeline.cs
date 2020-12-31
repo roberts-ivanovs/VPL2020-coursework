@@ -5,12 +5,12 @@ namespace DiseaseCore
 {
     public class PipelineReturnData
     {
-        internal List<EntityOnMap> newHealthy = new List<EntityOnMap>();
-        internal List<EntityOnMap> newSick = new List<EntityOnMap>();
+        internal List<EntityOnMap<HealthyEntity>> newHealthy = new List<EntityOnMap<HealthyEntity>>();
+        internal List<EntityOnMap<SickEntity>> newSick = new List<EntityOnMap<SickEntity>>();
     }
     public interface Pipeline
     {
         void updateTimeScale(float timeScale);
-        PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs);
+        PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs);
     }
 }

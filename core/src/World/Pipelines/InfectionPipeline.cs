@@ -16,7 +16,7 @@ namespace DiseaseCore
             this.radius = (ushort)(baseRadius * (Math.Log10(timeScale) + timeScale / 10));
         }
 
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             // Make entities sick if they need to
             /*
@@ -34,7 +34,7 @@ namespace DiseaseCore
                                 {
                                     // Only keep entries that are intersecting with sick people
                                     return currentSick
-                                        .Any(s => EntityOnMap.IsIntersecting(
+                                        .Any(s => EntityOnMap<SickEntity>.IsIntersecting(
                                             s.location, radius,
                                             h.location, radius)
                                         );
@@ -42,10 +42,11 @@ namespace DiseaseCore
                             .Select((x, idx) =>
                                 {
                                     // Covert to sick entities
-                                    x.entity = SickEntity.ConvertToSick((HealthyEntity)x.entity);
-                                    return x;
+                                    var sickEntity = SickEntity.ConvertToSick(x.entity);
+                                    var sickMapItem = new EntityOnMap<SickEntity>(x.location, sickEntity);
+                                    return sickMapItem;
                                 })
-                            .Aggregate((new List<ulong>(), new List<EntityOnMap>()), (aggregate, item) =>
+                            .Aggregate((new List<ulong>(), new List<EntityOnMap<SickEntity>>()), (aggregate, item) =>
                                 {
                                     aggregate.Item1.Add(item.ID);
                                     aggregate.Item2.Add(item);

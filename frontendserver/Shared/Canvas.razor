@@ -22,18 +22,42 @@
     }
 
 
-    public async Task DisplayItems((List<EntityOnMap>, List<EntityOnMap>) entitiesSorted)
+    public async Task DisplayItems((List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) entitiesSorted)
     {
+        // Perform normalization
+        entitiesSorted.Item1 = entitiesSorted.Item1
+            .Select(x => {
+                x.location = NormalizeLocation(World.MaxCoords, x.location);
+                return x;
+            }).ToList();
+        entitiesSorted.Item2 = entitiesSorted.Item2
+            .Select(x => {
+                x.location = NormalizeLocation(World.MaxCoords, x.location);
+                return x;
+            })
+            .ToList();
+
+        // Calculate metadata
+        var sickGood = entitiesSorted.Item1
+            .Where(x => ((SickEntity)x.entity).health > 0.5)
+            .Select(x => x.location)
+            .ToList();
+        var sickBad = entitiesSorted.Item1
+            .Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5)
+            .Select(x => x.location)
+            .ToList();
+        var sickAlmostDead = entitiesSorted.Item1
+            .Where(x => ((SickEntity)x.entity).health < 0.1)
+            .Select(x => x.location)
+            .ToList();
+        var healthy = entitiesSorted.Item2
+            .Select(x => x.location)
+            .ToList();
+
         // Clear canvas
         await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
-        entitiesSorted.Item1 = entitiesSorted.Item1.Where(x => x.entity is SickEntity).ToList();
-        entitiesSorted.Item2 = entitiesSorted.Item2.Where(x => x.entity is HealthyEntity).ToList();
-        // Render new items
-        var sickGood = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.5).ToList();
-        var sickBad = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5).ToList();
-        var sickAlmostDead = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health < 0.1).ToList();
         if (entitiesSorted.Item2.Count() > 0) {
-            await DrawItems(entitiesSorted.Item2, "green");
+            await DrawItems(healthy, "green");
         }
         if (sickGood.Count() > 0) {
             await DrawItems(sickGood, "#ED422C");
@@ -44,23 +68,17 @@
         if (sickAlmostDead.Count() > 0) {
             await DrawItems(sickAlmostDead, "#FBD9D4");
         }
-
     }
-
-    private async Task DrawItems(List<EntityOnMap> items, string color)
+    private async Task DrawItems(List<Point> items, string color)
     {
         await this._context.SetFillStyleAsync(color);
         await this._context.BeginPathAsync();
         items
-            .Select(x => NormalizeLocation(World.MaxCoords, x.location))
             .Select(async (x) => await DrawCircle(x))
             .ToList();
         await this._context.StrokeAsync();
         await this._context.FillAsync();
     }
-
-
-
     private Point NormalizeLocation(Point oldSystemCoords, Point pointInOldSystem)
     {
         /* The itnernal simulation is running in coordinates that are not same
@@ -82,8 +100,6 @@
             await this._context.ArcAsync(0, 0, circleRadius, 0, radiusFull, true);
         }
         await this._context.RestoreAsync();
-
-
     }
 
 

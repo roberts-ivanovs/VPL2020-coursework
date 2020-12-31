@@ -22,7 +22,7 @@ namespace DiseaseCore
             var yMiddlePointInArea = (quarantineAreaRightLowerCorner.Y - quarantineAreaLeftUpperCorner.Y) / 2;
             memoAreaCenter = new Point(xMiddlePointInArea, yMiddlePointInArea);
         }
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             currentSick.ForEach(x =>
             {

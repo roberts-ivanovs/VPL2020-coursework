@@ -8,7 +8,7 @@ namespace DiseaseCore
 
     public class TickingPipeline : AbstractPipeline
     {
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             var scaledTime = (ulong)(timeDeltaMs * timeScale);
             currentSick.ForEach(x => x.entity.Tick(scaledTime));

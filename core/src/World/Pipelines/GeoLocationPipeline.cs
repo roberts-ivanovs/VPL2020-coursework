@@ -6,13 +6,13 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    public class GeoLocationPipeline : AbstractPipeline
+    public class GeoLocationPipeline: AbstractPipeline
     {
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             var scaledTime = (ulong)(timeDeltaMs * timeScale);
-            GeoLocationPipeline.updateLocation(currentSick, scaledTime);
-            GeoLocationPipeline.updateLocation(currentHealthy, scaledTime);
+            GeoLocationPipelineUtility<SickEntity>.updateLocation(currentSick, scaledTime);
+            GeoLocationPipelineUtility<HealthyEntity>.updateLocation(currentHealthy, scaledTime);
             return new PipelineReturnData
             {
                 newHealthy = currentHealthy,
@@ -20,7 +20,11 @@ namespace DiseaseCore
             };
         }
 
-        private static void updateLocation(List<EntityOnMap> items, ulong scaledTime)
+    }
+
+    class GeoLocationPipelineUtility<T> where T: AbstractEntity
+    {
+        internal static void updateLocation(List<EntityOnMap<T>> items, ulong scaledTime)
         {
             items.ForEach(x =>
             {
@@ -31,5 +35,6 @@ namespace DiseaseCore
                 x.location.X = Math.Min(Math.Max(x.location.X, 1),  World.MaxCoords.X - 1);
             });
         }
+
     }
 }

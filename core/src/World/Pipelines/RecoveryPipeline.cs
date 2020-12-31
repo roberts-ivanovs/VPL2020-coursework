@@ -8,14 +8,16 @@ namespace DiseaseCore
 
     public class RecoveryPipeline : AbstractPipeline
     {
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             var newHealthy = currentSick
             .Where(x => ((SickEntity)x.entity).recovery >= 1f)
-            .Aggregate(new Tuple<List<EntityOnMap>, List<ulong>>(new List<EntityOnMap>(), new List<ulong>()), (aggregate, x) =>
+            .Aggregate(new Tuple<List<EntityOnMap<HealthyEntity>>, List<ulong>>(new List<EntityOnMap<HealthyEntity>>(), new List<ulong>()), (aggregate, x) =>
             {
-                x.entity = SickEntity.ConvertToHealthy((SickEntity)x.entity);
-                aggregate.Item1.Add(x);
+
+                var healthyEntity = SickEntity.ConvertToHealthy(x.entity);
+                var healthyPointOnMap = new EntityOnMap<HealthyEntity>(x.location, healthyEntity);
+                aggregate.Item1.Add(healthyPointOnMap);
                 aggregate.Item2.Add(x.ID);
                 return aggregate;
             }).ToValueTuple();

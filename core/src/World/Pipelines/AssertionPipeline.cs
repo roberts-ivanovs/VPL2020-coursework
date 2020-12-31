@@ -8,7 +8,7 @@ namespace DiseaseCore
 
     public class AssertionPipeline : AbstractPipeline
     {
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             currentSick
                 .ForEach(x => Debug.Assert(x.entity is SickEntity, "Entity was not SickEntity"));

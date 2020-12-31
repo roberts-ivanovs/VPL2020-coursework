@@ -3,6 +3,8 @@ using System.Numerics;
 
 namespace DiseaseCore
 {
+
+    // TODO define entity interface that can be used in Canvas.razor?
     public abstract class AbstractEntity
     {
         /* Static initializers */

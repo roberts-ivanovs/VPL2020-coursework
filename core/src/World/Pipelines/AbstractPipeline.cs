@@ -11,7 +11,7 @@ namespace DiseaseCore
     {
         protected float timeScale { get; set; } = 1f;
 
-        public virtual PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public virtual PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
             throw new NotImplementedException();
         }

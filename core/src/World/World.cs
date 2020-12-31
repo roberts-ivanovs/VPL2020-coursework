@@ -18,7 +18,7 @@ namespace DiseaseCore
     public struct GameState
     {
 
-        public (List<EntityOnMap>, List<EntityOnMap>) items;
+        public (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) items;
         public ushort sickPeople;
         public ushort healthyPeople;
     }
@@ -40,7 +40,8 @@ namespace DiseaseCore
 
         /* Live population accessors  */
         private Mutex outOfBoundsLock = new Mutex();
-        private List<EntityOnMap> outOfBoundsPopulation = new List<EntityOnMap>();
+        private List<EntityOnMap<SickEntity>> outOfBoundsPopulationSick = new List<EntityOnMap<SickEntity>>();
+        private List<EntityOnMap<HealthyEntity>> outOfBoundsPopulationHealthy = new List<EntityOnMap<HealthyEntity>>();
 
         /* Multiple threads */
         private Region[] regionManagers;
@@ -65,7 +66,7 @@ namespace DiseaseCore
             /* Create different entity managers */
             regionManagers = new Region[NumberOfCores];
             int deltaX = World.MaxCoords.X / NumberOfCores;
-            List<EntityOnMap> population = new List<EntityOnMap>();
+            List<EntityOnMap<AbstractEntity>> population = new List<EntityOnMap<AbstractEntity>>();
             // Populate the initially healthy population
             if (outOfBoundsLock.WaitOne())
             {
@@ -73,14 +74,14 @@ namespace DiseaseCore
                 {
                     var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
                     var entity_constructed = new HealthyEntity();
-                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                    outOfBoundsPopulationHealthy.Add(new EntityOnMap<HealthyEntity>(p, entity_constructed));
                 }
                 // Populate the initially sick population
                 for (ushort _ = 0; _ < initialSick; _++)
                 {
                     var p = new Point(rnd.Next(0, MaxCoords.X), rnd.Next(0, MaxCoords.Y));
                     var entity_constructed = new SickEntity();
-                    outOfBoundsPopulation.Add(new EntityOnMap(p, entity_constructed));
+                    outOfBoundsPopulationSick.Add(new EntityOnMap<SickEntity>(p, entity_constructed));
                 }
                 outOfBoundsLock.ReleaseMutex();
             }
@@ -93,22 +94,23 @@ namespace DiseaseCore
                 int localMaxX = i * deltaX + deltaX;
                 int localMinX = i * deltaX;
                 regionManagers[i] = new Region(
-                    (EntityOnMap entity) => MustLeave(entity, localMaxX, localMinX),
-                    (List<EntityOnMap> entity) => SyncResource(entity, i)
+                    (Point point) => MustLeave(point, localMaxX, localMinX),
+                    (List<EntityOnMap<SickEntity>> entitiesSick, List<EntityOnMap<HealthyEntity>> entitiesHealthy) => SyncResource(entitiesSick, entitiesHealthy, i)
                 );
             }
         }
 
-        private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)
+        private static bool MustLeave(Point point, int maxAllowedX, int minAllowedX)
         {
-            return entity.location.X < minAllowedX || entity.location.X > maxAllowedX;
+            return point.X < minAllowedX || point.X > maxAllowedX;
         }
 
-        private bool SyncResource(List<EntityOnMap> entities, int currentIndex)
+        private bool SyncResource(List<EntityOnMap<SickEntity>> entitiesSick, List<EntityOnMap<HealthyEntity>> entitiesHealthy, int currentIndex)
         {
             if (outOfBoundsLock.WaitOne())
             {
-                outOfBoundsPopulation.AddRange(entities);
+                outOfBoundsPopulationSick.AddRange(entitiesSick);
+                outOfBoundsPopulationHealthy.AddRange(entitiesHealthy);
                 outOfBoundsLock.ReleaseMutex();
                 return true;
             }
@@ -167,36 +169,53 @@ namespace DiseaseCore
         public GameState GetCurrentState()
         {
             this.SimState = SimulationState.PAUSED;
-            List<EntityOnMap>[] population;
+            List<EntityOnMap<HealthyEntity>>[] populationHealthy = new List<EntityOnMap<HealthyEntity>>[regionManagers.Length];
+            List<EntityOnMap<SickEntity>>[] populationSick = new List<EntityOnMap<SickEntity>>[regionManagers.Length];
+            pipelines.ForEach(x => x.updateTimeScale(timeScale));
+            for (int i = 0; i < regionManagers.Length; ++i)
             {
-                pipelines.ForEach(x => x.updateTimeScale(timeScale));
-                for (int i = 0; i < regionManagers.Length; ++i)
-                {
-                    regionManagers[i].SimState = SimulationState.PAUSED;
-                }
-
-                // Asynchronously extract the current state from each running task
-                Task[] waitingData = new Task[regionManagers.Length];
-                population = new List<EntityOnMap>[regionManagers.Length];
-                for (int i = 0; i < regionManagers.Length; ++i)
-                {
-                    int procIndex = i;
-                    waitingData[procIndex] = new Task(() =>
-                    {
-                        var item = regionManagers[procIndex].getEntities();
-                        population[procIndex] = item.Item1.Concat(item.Item2).ToList();
-                    });
-                    waitingData[procIndex].Start();
-                }
-                Task.WaitAll(waitingData);
+                regionManagers[i].SimState = SimulationState.PAUSED;
             }
+
+            // Asynchronously extract the current state from each running task
+            Task[] waitingData = new Task[regionManagers.Length];
+            for (int i = 0; i < regionManagers.Length; ++i)
+            {
+                int procIndex = i;
+                waitingData[procIndex] = new Task(() =>
+                {
+                    var item = regionManagers[procIndex].getEntities();
+                    populationSick[procIndex] = item.Item1;
+                    populationHealthy[procIndex] = item.Item2;
+                });
+                waitingData[procIndex].Start();
+            }
+            Task.WaitAll(waitingData);
             SyncTaskCode();
 
             outOfBoundsLock.WaitOne();
-            var returnable = population.Aggregate(
-                new List<EntityOnMap>(),
-                (current, next) => { current.AddRange(next); return current; }
-            ).Concat(outOfBoundsPopulation).ToList();
+            var populationHealthyList = populationHealthy
+                .Aggregate(
+                    new List<EntityOnMap<HealthyEntity>>(),
+                    (current, next) =>
+                    {
+                        current.AddRange(next);
+                        return current;
+                    }
+                )
+                .Concat(outOfBoundsPopulationHealthy)
+                .ToList();
+            var populationSickList = populationSick
+                .Aggregate(
+                    new List<EntityOnMap<SickEntity>>(),
+                    (current, next) =>
+                    {
+                        current.AddRange(next);
+                        return current;
+                    }
+                )
+                .Concat(outOfBoundsPopulationSick)
+                .ToList();
             outOfBoundsLock.ReleaseMutex();
 
             this.SimState = SimulationState.RUNNING;
@@ -205,29 +224,12 @@ namespace DiseaseCore
                 regionManagers[i].SimState = SimulationState.RUNNING;
             }
 
-            var items = returnable
-                .Aggregate(
-                    new Tuple<List<EntityOnMap>, List<EntityOnMap>>(new List<EntityOnMap>(), new List<EntityOnMap>()),
-                    (tuple, item) =>
-                    {
-                        if (item.entity is SickEntity)
-                        {
-                            tuple.Item1.Add(item);
-                        }
-                        else
-                        {
-                            tuple.Item2.Add(item);
-                        }
-                        return tuple;
-                    }
-                ).ToValueTuple();
-
-            var sickPeople = (ushort)items.Item1.Count();
-            var healthyPeople = (ushort)items.Item2.Count();
+            var sickPeople = (ushort)populationSickList.Count();
+            var healthyPeople = (ushort)populationHealthyList.Count();
 
             return new GameState
             {
-                items = items,
+                items = (populationSickList, populationHealthyList),
                 sickPeople = sickPeople,
                 healthyPeople = healthyPeople,
             };
@@ -239,15 +241,17 @@ namespace DiseaseCore
             if (outOfBoundsLock.WaitOne())
             {
                 // Initiate placeholder inbound values for each thread
-                List<EntityOnMap>[] inbound = new List<EntityOnMap>[regionManagers.Length];
+                List<EntityOnMap<SickEntity>>[] inboundSick = new List<EntityOnMap<SickEntity>>[regionManagers.Length];
+                List<EntityOnMap<HealthyEntity>>[] inboundHealthy = new List<EntityOnMap<HealthyEntity>>[regionManagers.Length];
                 for (int i = 0; i < regionManagers.Length; ++i)
                 {
-                    inbound[i] = new List<EntityOnMap>();
+                    inboundSick[i] = new List<EntityOnMap<SickEntity>>();
+                    inboundHealthy[i] = new List<EntityOnMap<HealthyEntity>>();
                 }
 
                 // Iterate over all `outOfBoundsPopulation` and
                 // figure out where should each item be placed
-                foreach (var item in outOfBoundsPopulation)
+                foreach (var item in outOfBoundsPopulationSick)
                 {
                     // Normalise the location
                     item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
@@ -255,22 +259,35 @@ namespace DiseaseCore
                     // Place each item in its appropriate placeholder data container
                     int index = item.location.X / deltaX;
                     index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
-                    inbound[index].Add(item);
+                    inboundSick[index].Add(item);
+                }
+                foreach (var item in outOfBoundsPopulationHealthy)
+                {
+                    // Normalise the location
+                    item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
+                    item.location.X = Math.Min(Math.Max(item.location.X, 1), World.MaxCoords.X - 1);
+                    // Place each item in its appropriate placeholder data container
+                    int index = item.location.X / deltaX;
+                    index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
+                    inboundHealthy[index].Add(item);
                 }
 
-                outOfBoundsPopulation.Clear();
+                outOfBoundsPopulationHealthy.Clear();
+                outOfBoundsPopulationSick.Clear();
                 // Place each item in its appropriate thread
                 for (int i = 0; i < regionManagers.Length; ++i)
                 {
-                    if (inbound[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne())
+                    if (inboundSick[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne())
                     {
-                        regionManagers[i].inbound.AddRange(inbound[i]);
+                        regionManagers[i].inboundSick.AddRange(inboundSick[i]);
+                        regionManagers[i].inboundHealthy.AddRange(inboundHealthy[i]);
                         regionManagers[i].inboundAccess.ReleaseMutex();
                     }
                     else
                     {
                         // Try appending the inbound item later
-                        outOfBoundsPopulation.AddRange(inbound[i]);
+                        outOfBoundsPopulationSick.AddRange(inboundSick[i]);
+                        outOfBoundsPopulationHealthy.AddRange(inboundHealthy[i]);
                     }
                 }
                 outOfBoundsLock.ReleaseMutex();

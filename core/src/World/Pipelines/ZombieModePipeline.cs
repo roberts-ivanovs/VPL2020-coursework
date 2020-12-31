@@ -9,7 +9,7 @@ namespace DiseaseCore
 
     public class ZombieModePipeline : AbstractPipeline
     {
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
 
             // Instantiating here (instead as a class variable), otherwise there
@@ -26,11 +26,11 @@ namespace DiseaseCore
                     // Go through all the entities and find the closest healthy entity
                     var closestEntity = currentHealthy
                         .Aggregate(
-                            new Tuple<EntityOnMap, double>(firstElement, (double)World.MaxCoords.X),
+                            new Tuple<EntityOnMap<HealthyEntity>, double>(firstElement, (double)World.MaxCoords.X),
                             (aggregate, item) =>
                             {
-                                var newDistance = EntityOnMap.calculateDistance(x.location, item.location);
-                                return newDistance < aggregate.Item2 ? new Tuple<EntityOnMap, double>(item, newDistance) : aggregate;
+                                var newDistance = EntityOnMap<HealthyEntity>.calculateDistance(x.location, item.location);
+                                return newDistance < aggregate.Item2 ? new Tuple<EntityOnMap<HealthyEntity>, double>(item, newDistance) : aggregate;
                             });
                     var closestX = Math.Sign(closestEntity.Item1.location.X - x.location.X);
                     var closestY = Math.Sign(closestEntity.Item1.location.Y - x.location.Y);

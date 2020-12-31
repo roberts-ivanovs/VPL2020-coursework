@@ -29,7 +29,7 @@ namespace DiseaseCore
                 attractors.Add(new Point(random.Next(0, maxX), random.Next(0, maxY)));
             }
         }
-        public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
+        public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
 
             if (dictionaryMutex.WaitOne(5))
@@ -42,7 +42,7 @@ namespace DiseaseCore
                     {
                         var attractorIndex = nextAttractor[x.ID];
                         // Check if located at desired attractor
-                        if (EntityOnMap.IsIntersecting(x.location, 1, attractors[attractorIndex], (ushort)attractorRadius))
+                        if (EntityOnMap<HealthyEntity>.IsIntersecting(x.location, 1, attractors[attractorIndex], (ushort)attractorRadius))
                         {
                             // Generte a new attractor to head towards
                             nextAttractor[x.ID] = random.Next(0, attractors.Count() - 1);

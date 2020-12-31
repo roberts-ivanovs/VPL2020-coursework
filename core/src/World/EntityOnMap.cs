@@ -4,14 +4,14 @@ using System.Drawing;
 namespace DiseaseCore
 {
 
-    public class EntityOnMap
+    public class EntityOnMap<T> where T: AbstractEntity
     {
-        public ulong ID { get; }
+        public ulong ID { get; internal set; }
         public static ulong IDCounter = 0;
         public Point location;
-        public AbstractEntity entity;
+        public T entity;
 
-        internal EntityOnMap(Point location, AbstractEntity entity)
+        internal EntityOnMap(Point location, T entity)
         {
             IDCounter += 1;
             ID = IDCounter;
@@ -34,6 +34,17 @@ namespace DiseaseCore
             var deltaX = second.X - first.X;
             var deltaY = second.Y - first.Y;
             return Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+        }
+    }
+
+    internal class EntityConverterUtility<T, K>
+        where T : AbstractEntity
+        where K : AbstractEntity {
+        internal static EntityOnMap<K> ConvertInnerEntities(EntityOnMap<T> mapItem, K entityToInject)
+        {
+            var mapitemNew = new EntityOnMap<K>(mapItem.location, entityToInject);
+            mapitemNew.ID = mapItem.ID;
+            return mapitemNew;
         }
     }
 
