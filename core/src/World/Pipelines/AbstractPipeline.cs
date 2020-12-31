@@ -7,7 +7,7 @@ using System.Numerics;
 namespace DiseaseCore
 {
 
-    internal class AbstractPipeline : Pipeline
+    public class AbstractPipeline : Pipeline
     {
         protected float timeScale { get; set; } = 1f;
 

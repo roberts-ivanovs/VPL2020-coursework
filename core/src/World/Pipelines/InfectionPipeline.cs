@@ -6,7 +6,7 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    internal class InfectionPipeline : AbstractPipeline
+    public class InfectionPipeline : AbstractPipeline
     {
         private ushort radius;
         private int baseRadius = World.MaxCoords.X / 50;

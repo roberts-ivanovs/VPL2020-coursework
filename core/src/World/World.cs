@@ -49,7 +49,7 @@ namespace DiseaseCore
         private SimulationState SimState;
         private List<Pipeline> pipelines = new List<Pipeline>();
 
-        public World(ushort initialHealthy, ushort initialSick, float timeScale, bool singleCore)
+        public World(ushort initialHealthy, ushort initialSick, float timeScale, bool singleCore, List<Pipeline> pipelines)
         {
 
             // Using 2/3 of the computer cores. The other 1/3 is used for UI
@@ -60,6 +60,7 @@ namespace DiseaseCore
             this.initialSick = initialSick;
             this.timeScale = timeScale;
             this.SimState = SimulationState.PAUSED;
+            this.pipelines = pipelines;
 
             /* Create different entity managers */
             regionManagers = new Region[NumberOfCores];
@@ -96,15 +97,6 @@ namespace DiseaseCore
                     (List<EntityOnMap> entity) => SyncResource(entity, i)
                 );
             }
-
-            pipelines.Add(new TickingPipeline());
-            pipelines.Add(new GeoLocationPipeline());
-            pipelines.Add(new DeathPipeline());
-            pipelines.Add(new InfectionPipeline());
-            pipelines.Add(new ZombieModePipeline());
-            pipelines.Add(new RecoveryPipeline());
-            pipelines.Add(new AssertionPipeline());
-            pipelines.Add(new HealthyAttractorPipeline());
         }
 
         private static bool MustLeave(EntityOnMap entity, int maxAllowedX, int minAllowedX)

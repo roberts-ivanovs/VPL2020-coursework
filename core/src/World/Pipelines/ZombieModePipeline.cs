@@ -7,7 +7,7 @@ using System.Numerics;
 namespace DiseaseCore
 {
 
-    internal class ZombieModePipeline : AbstractPipeline
+    public class ZombieModePipeline : AbstractPipeline
     {
         public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {

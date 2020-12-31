@@ -107,8 +107,14 @@
                 </div>
                 <hr />
                 <div>
-                    <p>Number of cores <b> @(simulation == null ? "unknown" : this.simulation.NumberOfCores.ToString())
-                        </b> </p>
+                    <p>Number of cores
+                        <b>
+                            @(simulation == null ? "unknown" : this.simulation.NumberOfCores.ToString())
+                        </b>
+
+                        <input type="checkbox" class="form-check-input" id="singleCore" autocomplete="off">
+                        <label class="form-check-label" for="singleCore">Use single core</label>
+                    </p>
                 </div>
                 <hr />
                 <div class="d-grid gap-2">
@@ -161,10 +167,12 @@
     private bool stopButtonEnabled { get; set; } = false;
     private bool startButtonEnabled { get; set; } = true;
     private bool inputsEnabled { get; set; } = true;
+    private bool singleCore { get; set; } = false;
 
     private int renderCanvasAfterEveryMiliseconds { get; set;} = 50;
     private Canvas EntityCanvas;
     private Statistics _statistics;
+    private List<Pipeline> pipelines = new List<Pipeline>();
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
@@ -179,7 +187,23 @@
 
     async void StartSimulation()
     {
-        simulation = new World((ushort)(InitialPopulation - InitialSickPeople), InitialSickPeople, TimeScale, true);
+        /* Construct the pipelines */
+        pipelines.Add(new TickingPipeline());
+        pipelines.Add(new GeoLocationPipeline());
+        pipelines.Add(new DeathPipeline());
+        pipelines.Add(new InfectionPipeline());
+        pipelines.Add(new ZombieModePipeline());
+        pipelines.Add(new RecoveryPipeline());
+        pipelines.Add(new AssertionPipeline());
+        pipelines.Add(new HealthyAttractorPipeline());
+
+        /* Construct the World object */
+        simulation = new World(
+            (ushort)(InitialPopulation - InitialSickPeople),
+            InitialSickPeople,
+            TimeScale,
+            singleCore,
+            pipelines);
         simulation.Start();
         stopButtonEnabled = true;
         startButtonEnabled = false;

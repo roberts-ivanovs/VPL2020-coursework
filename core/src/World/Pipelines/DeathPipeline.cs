@@ -5,7 +5,7 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    internal class DeathPipeline : AbstractPipeline
+    public class DeathPipeline : AbstractPipeline
     {
         public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs) => new PipelineReturnData
         {

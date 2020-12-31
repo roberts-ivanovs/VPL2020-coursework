@@ -6,7 +6,7 @@ using System.Linq;
 namespace DiseaseCore
 {
 
-    internal class TickingPipeline : AbstractPipeline
+    public class TickingPipeline : AbstractPipeline
     {
         public override PipelineReturnData pushThrough(List<EntityOnMap> currentSick, List<EntityOnMap> currentHealthy, ulong timeDeltaMs)
         {
