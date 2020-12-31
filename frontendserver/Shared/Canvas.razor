@@ -26,6 +26,8 @@
     {
         // Clear canvas
         await this._context.ClearRectAsync(0, 0, _canvasReference.Width, _canvasReference.Height);
+        entitiesSorted.Item1 = entitiesSorted.Item1.Where(x => x.entity is SickEntity).ToList();
+        entitiesSorted.Item2 = entitiesSorted.Item2.Where(x => x.entity is HealthyEntity).ToList();
         // Render new items
         var sickGood = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.5).ToList();
         var sickBad = entitiesSorted.Item1.Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5).ToList();
