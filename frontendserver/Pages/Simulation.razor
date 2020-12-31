@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <div>
-                        Canvas refresh rate = @renderCanvasAfterEveryMiliseconds (ms)
+                        Data polling rate = @renderCanvasAfterEveryMiliseconds (ms)
                     </div>
                     <div>
                         <input type="range" min="10" max="1000" step="10" @bind="renderCanvasAfterEveryMiliseconds"
@@ -56,50 +56,50 @@
                     <div class="row">
                         <div class="col">
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck1" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="tickingPipeline" type="checkbox" class="form-check-input" id="btncheck1" autocomplete="off">
                                 <label class="form-check-label" for="btncheck1">Entity inner clock</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck2" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="geoLocationPipeline" type="checkbox" class="form-check-input" id="btncheck2" autocomplete="off">
                                 <label class="form-check-label" for="btncheck2">Geolocation</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck3" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="assertionPipeline"  type="checkbox" class="form-check-input" id="btncheck3" autocomplete="off">
                                 <label class="form-check-label" for="btncheck3">Runtime type check</label>
                             </div>
                         </div>
                         <div class="col">
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck4" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="deathPipeline"  type="checkbox" class="form-check-input" id="btncheck4" autocomplete="off">
                                 <label class="form-check-label" for="btncheck4">Disease can kill</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck5" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="infectionPipeline"  type="checkbox" class="form-check-input" id="btncheck5" autocomplete="off">
                                 <label class="form-check-label" for="btncheck5">Disease can spread</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck6" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="recoveryPipeline"  type="checkbox" class="form-check-input" id="btncheck6" autocomplete="off">
                                 <label class="form-check-label" for="btncheck6">Recovery possible</label>
                             </div>
                         </div>
                         <div class="col">
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck7" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="healthyAttractorPipeline"  type="checkbox" class="form-check-input" id="btncheck7" autocomplete="off">
                                 <label class="form-check-label" for="btncheck7">Scattered attractors</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck8" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="zombieModePipeline"  type="checkbox" class="form-check-input" id="btncheck8" autocomplete="off">
                                 <label class="form-check-label" for="btncheck8">Zombie mode</label>
                             </div>
 
                             <div>
-                                <input type="checkbox" class="form-check-input" id="btncheck9" autocomplete="off">
+                                <input disabled="@(!inputsEnabled)" @bind="quarantinePipeline"  type="checkbox" class="form-check-input" id="btncheck9" autocomplete="off">
                                 <label class="form-check-label" for="btncheck9">Sick entity quarantine</label>
                             </div>
                         </div>
@@ -112,7 +112,7 @@
                             @(simulation == null ? "unknown" : this.simulation.NumberOfCores.ToString())
                         </b>
 
-                        <input type="checkbox" class="form-check-input" id="singleCore" autocomplete="off">
+                        <input disabled="@(!inputsEnabled)" @bind="singleCore" type="checkbox" class="form-check-input" id="singleCore" autocomplete="off">
                         <label class="form-check-label" for="singleCore">Use single core</label>
                     </p>
                 </div>
@@ -172,7 +172,17 @@
     private int renderCanvasAfterEveryMiliseconds { get; set;} = 50;
     private Canvas EntityCanvas;
     private Statistics _statistics;
-    private List<Pipeline> pipelines = new List<Pipeline>();
+
+    /* Pipeline flags */
+    private bool tickingPipeline { get; set; } = true;
+    private bool geoLocationPipeline { get; set; } = true;
+    private bool deathPipeline { get; set; } = true;
+    private bool infectionPipeline { get; set; } = true;
+    private bool zombieModePipeline { get; set; } = true;
+    private bool recoveryPipeline { get; set; } = true;
+    private bool assertionPipeline { get; set; } = true;
+    private bool healthyAttractorPipeline { get; set; } = true;
+    private bool quarantinePipeline { get; set; } = true;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
     {
@@ -188,14 +198,25 @@
     async void StartSimulation()
     {
         /* Construct the pipelines */
-        pipelines.Add(new TickingPipeline());
-        pipelines.Add(new GeoLocationPipeline());
-        pipelines.Add(new DeathPipeline());
-        pipelines.Add(new InfectionPipeline());
-        pipelines.Add(new ZombieModePipeline());
-        pipelines.Add(new RecoveryPipeline());
-        pipelines.Add(new AssertionPipeline());
-        pipelines.Add(new HealthyAttractorPipeline());
+        var pipelines = new List<Pipeline>();
+        if (tickingPipeline)
+            pipelines.Add(new TickingPipeline());
+        if (geoLocationPipeline)
+            pipelines.Add(new GeoLocationPipeline());
+        if (deathPipeline)
+            pipelines.Add(new DeathPipeline());
+        if (infectionPipeline)
+            pipelines.Add(new InfectionPipeline());
+        if (zombieModePipeline)
+            pipelines.Add(new ZombieModePipeline());
+        if (recoveryPipeline)
+            pipelines.Add(new RecoveryPipeline());
+        if (assertionPipeline)
+            pipelines.Add(new AssertionPipeline());
+        if (healthyAttractorPipeline)
+            pipelines.Add(new HealthyAttractorPipeline());
+        @* if (quarantinePipeline) *@
+
 
         /* Construct the World object */
         simulation = new World(
