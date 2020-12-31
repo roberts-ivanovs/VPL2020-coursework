@@ -57,7 +57,7 @@ a, .btn-link {
 }
 
 .bg-light {
-    background-color: #7ba576 !important;
+    background-color: #223f1f !important;
     color: white !important;
 }
 
@@ -69,8 +69,20 @@ a, .btn-link {
     color: white !important;
 }
 
-.fixed-bottom {
-    background-color: #7ba576;
+body {
+    min-height: 100vh;
+}
+main {
+    min-height: 90vh;
+}
+
+header {
+    min-height: 5vh;
+}
+
+footer {
+    min-height: 5vh;
+    background-color: #223f1f;
     color: white;
 }
 
