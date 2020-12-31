@@ -131,26 +131,5 @@ namespace DiseaseCore
             }
             return res;
         }
-
-
-        internal static (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) sortEntities(List<EntityOnMap<AbstractEntity>> inbound)
-        {
-            var res1 = inbound
-                .Where(x => x.entity is SickEntity)
-                .Select(x =>
-                {
-                    return EntityConverterUtility<AbstractEntity, SickEntity>.ConvertInnerEntities(x, (SickEntity)x.entity);
-                })
-                .ToList();
-            var res2 = inbound
-                .Where(x => x.entity is HealthyEntity)
-                .Select(x =>
-                {
-                    return EntityConverterUtility<AbstractEntity, HealthyEntity>.ConvertInnerEntities(x, (HealthyEntity)x.entity);
-                })
-                .ToList();
-
-            return (res1, res2);
-        }
     }
 }

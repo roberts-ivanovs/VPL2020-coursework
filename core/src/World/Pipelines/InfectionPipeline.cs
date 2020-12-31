@@ -43,7 +43,7 @@ namespace DiseaseCore
                                 {
                                     // Covert to sick entities
                                     var sickEntity = SickEntity.ConvertToSick(x.entity);
-                                    var sickMapItem = new EntityOnMap<SickEntity>(x.location, sickEntity);
+                                    var sickMapItem = EntityConverterUtility<HealthyEntity, SickEntity>.ConvertInnerEntities(x, sickEntity);
                                     return sickMapItem;
                                 })
                             .Aggregate((new List<ulong>(), new List<EntityOnMap<SickEntity>>()), (aggregate, item) =>

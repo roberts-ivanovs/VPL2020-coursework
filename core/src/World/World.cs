@@ -271,13 +271,14 @@ namespace DiseaseCore
                     index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
                     inboundHealthy[index].Add(item);
                 }
+                // Console.WriteLine($"outOfBoundsPopulationHealthy {outOfBoundsPopulationHealthy.Count()}");
 
                 outOfBoundsPopulationHealthy.Clear();
                 outOfBoundsPopulationSick.Clear();
                 // Place each item in its appropriate thread
                 for (int i = 0; i < regionManagers.Length; ++i)
                 {
-                    if (inboundSick[i].Count() > 0 && regionManagers[i].inboundAccess.WaitOne())
+                    if ((inboundSick[i].Count() > 0 || inboundHealthy[i].Count() > 0) && regionManagers[i].inboundAccess.WaitOne())
                     {
                         regionManagers[i].inboundSick.AddRange(inboundSick[i]);
                         regionManagers[i].inboundHealthy.AddRange(inboundHealthy[i]);

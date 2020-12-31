@@ -24,34 +24,22 @@
 
     public async Task DisplayItems((List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) entitiesSorted)
     {
-        // Perform normalization
-        entitiesSorted.Item1 = entitiesSorted.Item1
-            .Select(x => {
-                x.location = NormalizeLocation(World.MaxCoords, x.location);
-                return x;
-            }).ToList();
-        entitiesSorted.Item2 = entitiesSorted.Item2
-            .Select(x => {
-                x.location = NormalizeLocation(World.MaxCoords, x.location);
-                return x;
-            })
-            .ToList();
 
         // Calculate metadata
         var sickGood = entitiesSorted.Item1
             .Where(x => ((SickEntity)x.entity).health > 0.5)
-            .Select(x => x.location)
+            .Select(x =>  NormalizeLocation(World.MaxCoords, x.location))
             .ToList();
         var sickBad = entitiesSorted.Item1
             .Where(x => ((SickEntity)x.entity).health > 0.1 && ((SickEntity)x.entity).health < 0.5)
-            .Select(x => x.location)
+            .Select(x =>  NormalizeLocation(World.MaxCoords, x.location))
             .ToList();
         var sickAlmostDead = entitiesSorted.Item1
             .Where(x => ((SickEntity)x.entity).health < 0.1)
-            .Select(x => x.location)
+            .Select(x =>  NormalizeLocation(World.MaxCoords, x.location))
             .ToList();
         var healthy = entitiesSorted.Item2
-            .Select(x => x.location)
+            .Select(x =>  NormalizeLocation(World.MaxCoords, x.location))
             .ToList();
 
         // Clear canvas

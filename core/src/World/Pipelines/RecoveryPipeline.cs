@@ -14,11 +14,10 @@ namespace DiseaseCore
             .Where(x => ((SickEntity)x.entity).recovery >= 1f)
             .Aggregate(new Tuple<List<EntityOnMap<HealthyEntity>>, List<ulong>>(new List<EntityOnMap<HealthyEntity>>(), new List<ulong>()), (aggregate, x) =>
             {
-
                 var healthyEntity = SickEntity.ConvertToHealthy(x.entity);
-                var healthyPointOnMap = new EntityOnMap<HealthyEntity>(x.location, healthyEntity);
-                aggregate.Item1.Add(healthyPointOnMap);
-                aggregate.Item2.Add(x.ID);
+                var sickMapItem = EntityConverterUtility<SickEntity, HealthyEntity>.ConvertInnerEntities(x, healthyEntity);
+                aggregate.Item1.Add(sickMapItem);
+                aggregate.Item2.Add(sickMapItem.ID);
                 return aggregate;
             }).ToValueTuple();
             return new PipelineReturnData

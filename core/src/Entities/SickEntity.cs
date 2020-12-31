@@ -17,6 +17,7 @@ namespace DiseaseCore
         public static SickEntity ConvertToSick(HealthyEntity entity)
         {
             var sick = new SickEntity();
+            sick.direction = entity.direction;
             sick.age = entity.age;
             return sick;
         }
@@ -24,6 +25,7 @@ namespace DiseaseCore
         public static HealthyEntity ConvertToHealthy(SickEntity entity)
         {
             var healthy = new HealthyEntity();
+            healthy.direction = entity.direction;
             healthy.age = entity.age;
             return healthy;
         }
