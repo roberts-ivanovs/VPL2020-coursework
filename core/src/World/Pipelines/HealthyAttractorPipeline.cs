@@ -22,17 +22,19 @@ namespace DiseaseCore
         public HealthyAttractorPipeline()
         {
             var attractorCount = random.Next(3, 10);
+            var deltaX = World.MaxCoords.X / 10;
+            var deltaY = World.MaxCoords.Y / 10;
             for (int i = 0; i < attractorCount; ++i)
             {
                 var maxX = World.MaxCoords.X;
                 var maxY = World.MaxCoords.Y;
-                attractors.Add(new Point(random.Next(0, maxX), random.Next(0, maxY)));
+                attractors.Add(new Point(random.Next(0 + deltaX, maxX - deltaX), random.Next(0 + deltaY, maxY - deltaY)));
             }
         }
         public override PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs)
         {
 
-            if (dictionaryMutex.WaitOne(5))
+            if (dictionaryMutex.WaitOne(1))
             {
                 // Perform attractor assignment
                 currentHealthy.ForEach(x =>
