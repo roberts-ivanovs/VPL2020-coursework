@@ -1,5 +1,3 @@
-\subsection{Projekta struktūra}
-
 Pirms sākot faktisko programmēšanu, darba autors veltīja laiku projekta
 struktūras izplānošanai, lai veiksmīģiv arētu projetu realizet. Viens no šādiem
 galvenajiem mērķiem bija atdalīt vizuālo lietotāju saskarni no pašas simulācijas.
@@ -23,9 +21,35 @@ menedžējamu, kad biaj nepieciešams veikt izmaiņas kodā, jo, paturot Disease
 publisko interfeisu nemainīgu, bija ērti veikt izmaiņas pāšā simulācijas loģikā
 pat pēc UI izstrādes, neradot papildus liekas koda kompilēšanas kļūdas.
 
-\subsubsection*{Simulācijas koda struktūra}
-% TODO Finish this
+\subsubsection*{Simulācijas koda vispārīga būtība}
 
+Simulācijas kods nodrošina sekojošās pamatdarbības:
 
-\subsubsection*{Lietotāja saskarnes koda struktūra}
-% TODO Finish this
+\begin{itemize}
+    \item Veselu entītiju dzīvesciklu
+    \item Slimu entītiju dzīvesciklu
+    \item Entītiju savstarpēju mijiedarbību
+\end{itemize}
+
+Ideja ir reprezentēt katru entītiju kā punktu plaknē (izstrādes
+laikā tika pieņemts lēmums plakni tomēr ierobežot, aizliedzot entītijiem šķērsot
+noteiktas robežas). Katrs entītijs zina noteiktas vērtības par sevi - virzienu
+uz kuru dodas (reprezentē ar vektoru), vecumu, veselības stāvokli. Simulācijas
+kods atļauj ērtā veidā definēt darbības ar entītijiem - infekcijas izplatīšanos,
+atveseļošanos, noteiktu \emph{mērķu} definēšanu plaknē pa kuriem entītiji ceļos
+(vienkāršs veids lai simulētu veikalus/slimnīcas/skolas u.cc publiskas telpas
+kur entītiji dodas tikties). Tiek arī nodrošināta iespēja slimos entītijus
+ielikt karantīnā, līdz tie atveseļojas. Viena no darba autora iecienītākajām
+funkcijām ir ,,Zombie mode", kas liek slimajiem entītijiem dzīties
+pakaļ veselajiem, līdz visa populācija saslimst (lai gan šis nebija no izvirzītajiem mērķiem).
+
+\subsubsection*{Lietotāja saskarnes koda vispārīgā būtība}
+
+Lietotāja saskarnes galvenā ideja ir parādīt entītijus kaut kādā plaknē, tos
+iekrāsot uzskatāmā veidā, un nodrošināt dažādo funckiju izslēgšanu un ieslēgšanu
+priekš simulācijas (piemēram \emph{karantīna}, \emph{zombie mode},
+\emph{slimības pārnēsāšanās}, utt.). Kā arī tiek nodrošināta papildus meta-datu
+parādīšana lietotājam par to kā strādā esošā sistēma.
+
+Vizualā saskarne nav ļoti sarežģīta, jo tās galvenais mērķis ir parādīt simulāciajs
+informāciju.
