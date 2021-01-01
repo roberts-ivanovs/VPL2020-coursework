@@ -1,7 +1,4 @@
-﻿using System;
-using DiseaseCore;
-
-namespace coursework
+﻿namespace coursework
 {
     class Program
     {
