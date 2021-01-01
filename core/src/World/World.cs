@@ -17,7 +17,7 @@ namespace DiseaseCore
 
     public struct GameState
     {
-
+        public ulong[] loopsDone;
         public (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) items;
         public ushort sickPeople;
         public ushort healthyPeople;
@@ -56,7 +56,15 @@ namespace DiseaseCore
             // Using 2/3 of the computer cores. The other 1/3 is used for UI
             // rendering, server handling, your OS, etc.
             // Remove the arithmetic below and watch your computer INCENERATE.
-            this.NumberOfCores = singleCore ? 1 : Environment.ProcessorCount * 2 / 3;
+            var calculatedOptimalCores = Environment.ProcessorCount * 2 / 3;
+            if (singleCore || calculatedOptimalCores < 1)
+            {
+                this.NumberOfCores = 1;
+            }
+            else
+            {
+                this.NumberOfCores = calculatedOptimalCores;
+            }
             this.initialHealthy = initialHealthy;
             this.initialSick = initialSick;
             this.timeScale = timeScale;
@@ -169,6 +177,7 @@ namespace DiseaseCore
         public GameState GetCurrentState()
         {
             this.SimState = SimulationState.PAUSED;
+            ulong[] loopsDone = new ulong[regionManagers.Length];
             List<EntityOnMap<HealthyEntity>>[] populationHealthy = new List<EntityOnMap<HealthyEntity>>[regionManagers.Length];
             List<EntityOnMap<SickEntity>>[] populationSick = new List<EntityOnMap<SickEntity>>[regionManagers.Length];
             pipelines.ForEach(x => x.updateTimeScale(timeScale));
@@ -187,6 +196,7 @@ namespace DiseaseCore
                     var item = regionManagers[procIndex].getEntities();
                     populationSick[procIndex] = item.Item1;
                     populationHealthy[procIndex] = item.Item2;
+                    loopsDone[procIndex] = item.Item3;
                 });
                 waitingData[procIndex].Start();
             }
@@ -229,6 +239,7 @@ namespace DiseaseCore
 
             return new GameState
             {
+                loopsDone = loopsDone,
                 items = (populationSickList, populationHealthyList),
                 sickPeople = sickPeople,
                 healthyPeople = healthyPeople,

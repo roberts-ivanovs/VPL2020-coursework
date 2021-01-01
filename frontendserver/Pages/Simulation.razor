@@ -19,7 +19,7 @@
                         Initial population = @InitialPopulation
                     </div>
                     <div>
-                        <input type="range" min="0" max="500" step="1" disabled="@(!inputsEnabled)" class="form-range"
+                        <input type="range" min="0" max="1000" step="1" disabled="@(!inputsEnabled)" class="form-range"
                             @bind="InitialPopulation" @bind:event="oninput" @onchange="HandleGlobalPopulationChange" />
                     </div>
                 </div>
@@ -230,6 +230,7 @@
         stopButtonEnabled = true;
         startButtonEnabled = false;
         inputsEnabled = false;
+        _statistics.ResetCoreData();
         _statistics.initialPeople = InitialPopulation;
         await ReloadInformation();
     }
@@ -260,8 +261,12 @@
                 {
                     before = now;
                     var gameState = simulation.GetCurrentState();
+                    /* Adjust the timing to be `loops per second` */
+                    var loopsPerSecond = gameState.loopsDone
+                        .Select(x => x * 1000 / (ulong)renderCanvasAfterEveryMiliseconds )
+                        .ToArray();
                     simulation.timeScale = TimeScale;
-                    await _statistics.setNewData(gameState.sickPeople, gameState.healthyPeople);
+                    await _statistics.setNewData(gameState.sickPeople, gameState.healthyPeople, loopsPerSecond);
                     await EntityCanvas.DisplayItems(gameState.items);
                 }
             }

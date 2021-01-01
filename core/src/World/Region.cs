@@ -25,6 +25,7 @@ namespace DiseaseCore
         /* Game defining state */
         public SimulationState SimState { get; set; }
         private int baseRadius = World.MaxCoords.X / 100;
+        private ulong loopsDone = 0;
 
         public Region(
             Func<Point, bool> entityMustLeave,
@@ -86,6 +87,7 @@ namespace DiseaseCore
 
                         ReadFromInbound();
                         previous = current; // Stopwatch update
+                        loopsDone += 1;
                         populationAccess.ReleaseMutex();
                     }
                     else
@@ -115,14 +117,15 @@ namespace DiseaseCore
             }
         }
 
-        public (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) getEntities()
+        public (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>, ulong) getEntities()
         {
-            (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>) res;
+            (List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>, ulong) res;
             if (populationAccess.WaitOne())
             {
 
                 ReadFromInbound();
-                res = (populationSick, populationHealthy);
+                res = (populationSick, populationHealthy, loopsDone);
+                loopsDone = 0;
                 populationAccess.ReleaseMutex();
             }
             else
