@@ -90,7 +90,11 @@
                         <div class="col">
                             <div>
                                 <input disabled="@(!inputsEnabled)" @bind="healthyAttractorPipeline"  type="checkbox" class="form-check-input" id="btncheck7" autocomplete="off">
-                                <label class="form-check-label" for="btncheck7">Scattered attractors</label>
+                                <label class="form-check-label" for="btncheck7">Healthy attractors</label>
+                            </div>
+                            <div>
+                                <input disabled="@(!inputsEnabled)" @bind="sickAttractorPipeline"  type="checkbox" class="form-check-input" id="btncheck10" autocomplete="off">
+                                <label class="form-check-label" for="btncheck7">Sick attractors</label>
                             </div>
 
                             <div>
@@ -182,6 +186,7 @@
     private bool recoveryPipeline { get; set; } = true;
     private bool assertionPipeline { get; set; } = true;
     private bool healthyAttractorPipeline { get; set; } = true;
+    private bool sickAttractorPipeline { get; set; } = false;
     private bool quarantinePipeline { get; set; } = true;
 
     void HandleGlobalPopulationChange(ChangeEventArgs e)
@@ -207,14 +212,14 @@
             pipelines.Add(new DeathPipeline());
         if (infectionPipeline)
             pipelines.Add(new InfectionPipeline());
-        if (zombieModePipeline)
-            pipelines.Add(new ZombieModePipeline());
         if (recoveryPipeline)
             pipelines.Add(new RecoveryPipeline());
         if (assertionPipeline)
             pipelines.Add(new AssertionPipeline());
-        if (healthyAttractorPipeline)
-            pipelines.Add(new AttractorPipeline(true, true));
+        if (healthyAttractorPipeline || sickAttractorPipeline)
+            pipelines.Add(new AttractorPipeline(sickAttractorPipeline, healthyAttractorPipeline));
+        if (zombieModePipeline)
+            pipelines.Add(new ZombieModePipeline());
         if (quarantinePipeline)
             pipelines.Add(new QuarantinePipeline());
 
