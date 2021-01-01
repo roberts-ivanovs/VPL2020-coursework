@@ -1,0 +1,31 @@
+\subsection{Projekta struktūra}
+
+Pirms sākot faktisko programmēšanu, darba autors veltīja laiku projekta
+struktūras izplānošanai, lai veiksmīģiv arētu projetu realizet. Viens no šādiem
+galvenajiem mērķiem bija atdalīt vizuālo lietotāju saskarni no pašas simulācijas.
+C\# piedāvā diez gan labu risinājumu šādas projetkas struktūras attīstīšanai - izmantojot
+\emph{namespaces} \cite{csharp:namespaces}. Tādējādi projekts tika strukturēts
+divās galvenajās pakotnēs:
+
+\begin{itemize}
+    \item \emph{DiseaseCore} - atbildīgs par simulācijas veikšanu un programmiskā
+        interfeisa piedāvāšanu, simulācijas veikšanai
+    \item \emph{frontendserver} - atbildīgs par lietotāju saskarni
+\end{itemize}
+
+Šādu pieeju darba autors sākotnēji izvēlējās, jo nebija vēl pilnībā pārliecināts
+par to, vai ar Blazor būs iespējams realizēt vēlamo projektu, tādēļ šadi atdalot
+lietotāju saskarni no simulācijas koda, ar nosacījumu, ka simulācijas kods tiek
+uzrakstīts pirms UI koda, varēs ērtāk \emph{pārlekt kuģus}, ja Blazor nebūs
+iespējams izmatnot darbam un vajadžēs izmantto WPF. Lai gan darba izstrāde
+izmantojot Blazor bija veiksmīga, tomēr šāda koda atdalīšana padarīja to ērtāk
+menedžējamu, kad biaj nepieciešams veikt izmaiņas kodā, jo, paturot DiseaseCore
+publisko interfeisu nemainīgu, bija ērti veikt izmaiņas pāšā simulācijas loģikā
+pat pēc UI izstrādes, neradot papildus liekas koda kompilēšanas kļūdas.
+
+\subsubsection*{Simulācijas koda struktūra}
+% TODO Finish this
+
+
+\subsubsection*{Lietotāja saskarnes koda struktūra}
+% TODO Finish this
