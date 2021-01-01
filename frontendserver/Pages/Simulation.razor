@@ -214,7 +214,7 @@
         if (assertionPipeline)
             pipelines.Add(new AssertionPipeline());
         if (healthyAttractorPipeline)
-            pipelines.Add(new HealthyAttractorPipeline());
+            pipelines.Add(new AttractorPipeline(true, true));
         if (quarantinePipeline)
             pipelines.Add(new QuarantinePipeline());
 

@@ -9,7 +9,7 @@ using System.Threading;
 namespace DiseaseCore
 {
 
-    public class HealthyAttractorPipeline : AbstractPipeline
+    public class AttractorPipeline : AbstractPipeline
     {
 
         private Random random = new Random();
@@ -19,8 +19,12 @@ namespace DiseaseCore
         // Key -> EntityOnMap ID; Value -> index of the next attractor
         private Dictionary<ulong, int> nextAttractor = new Dictionary<ulong, int>();
         private int attractorRadius = World.MaxCoords.X / 300;
-        public HealthyAttractorPipeline()
+        private bool redirectSick = false;
+        private bool redirectHealthy = false;
+        public AttractorPipeline(bool redirectSick, bool redirectHealthy)
         {
+            this.redirectSick = redirectSick;
+            this.redirectHealthy = redirectHealthy;
             var attractorCount = random.Next(3, 10);
             var deltaX = World.MaxCoords.X / 10;
             var deltaY = World.MaxCoords.Y / 10;
@@ -36,15 +40,52 @@ namespace DiseaseCore
 
             if (dictionaryMutex.WaitOne(1))
             {
+                if (redirectHealthy)
+                    HealthyAttractorPipelineUtility<HealthyEntity>.iterateOver(
+                        currentHealthy,
+                        random,
+                        nextAttractor,
+                        attractors,
+                        attractorRadius
+                    );
+                if (redirectSick)
+                    HealthyAttractorPipelineUtility<SickEntity>.iterateOver(
+                        currentSick,
+                        random,
+                        nextAttractor,
+                        attractors,
+                        attractorRadius
+                    );
                 // Perform attractor assignment
-                currentHealthy.ForEach(x =>
+                dictionaryMutex.ReleaseMutex();
+            }
+            return new PipelineReturnData
+            {
+                newHealthy = currentHealthy,
+                newSick = currentSick,
+            };
+        }
+    }
+
+    class HealthyAttractorPipelineUtility<T> where T : AbstractEntity
+    {
+        internal static void iterateOver(
+            List<EntityOnMap<T>> entities,
+            Random random,
+            Dictionary<ulong, int> nextAttractor,
+            List<Point> attractors,
+            int attractorRadius
+        )
+        {
+            // Perform attractor assignment
+            entities.ForEach(x =>
                 {
                     // Check if is registered
                     if (nextAttractor.ContainsKey(x.ID))
                     {
                         var attractorIndex = nextAttractor[x.ID];
                         // Check if located at desired attractor
-                        if (EntityOnMap<HealthyEntity>.IsIntersecting(x.location, 1, attractors[attractorIndex], (ushort)attractorRadius))
+                        if (EntityOnMap<SickEntity>.IsIntersecting(x.location, 1, attractors[attractorIndex], (ushort)attractorRadius))
                         {
                             // Generte a new attractor to head towards
                             nextAttractor[x.ID] = random.Next(0, attractors.Count() - 1);
@@ -63,13 +104,6 @@ namespace DiseaseCore
                         nextAttractor[x.ID] = random.Next(0, attractors.Count() - 1);
                     }
                 });
-                dictionaryMutex.ReleaseMutex();
-            }
-            return new PipelineReturnData
-            {
-                newHealthy = currentHealthy,
-                newSick = currentSick,
-            };
         }
     }
 }
