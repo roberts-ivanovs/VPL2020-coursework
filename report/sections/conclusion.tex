@@ -1,0 +1,57 @@
+Darba autors uzskata, ka izstradātā sistēma dara tieši to, ko sākotnēji bija
+definējis kā galveno mērķi -- \emph{veikt slimības izplatības modelēšanu}. Kā arī
+galvenie apakšuzdevumi ir izpildīti -- ir nodrošināta vizuālā saskarne, iespēja
+konfigurēt sistēmu un izpētīt slimības apturošos mehānismsus (karantīnas \emph{pipeline}).
+
+Tomēr, darbu izstrādāt nebija viegli un darba autoram ir vairākas atziņas, kuras
+var veikt, gan par pašu projektu, gan C\# kā valodu un .NET ekosistemu un WebAssembly.
+
+\begin{itemize}
+    \item Darba autora primārā koda rakstīšanas vide is Visual Studio Code, kas
+    nodrošina OmniSharp C\# valodas serveri priekš C\# koda, bet \emph{Razor} koda
+    failu apstrāde lika tam regulāri pēkšņi pārtraukt darbību. Diemžēl cita alternatīva
+    nebija. Visos pārējos failos tas strādāja ideāli, tomēr laikam tieši šim projektam
+    (Blazor/Razor) OmniSharp ir nepieciešama papildus izstrāde.
+    \item Darba autors nevarēja atrast labu koda stila linteri, kuru būtu iespējams
+    palaist pat no komandrindas, kas pieturētos pie C\# dokumentācijā aprakstītā labā koda stila % TODO reference here
+    \item Integrācija ar interneta pārlūkprogrammu no C\# koda ir ļoti slikta.
+    Eksistē tiaki viena bibliotēka -- \emph{BlazorExtensions.Canvas} --, kas
+    nodrošina pieeju priekš \emph{HTML canvas}, kur WebGL API nestrādāja (varbūt
+    tā ir darba autora paša vaina?).
+    \item Tā kā \emph{HTML canvas} ir
+    JavaScript API, tad katrs funkcijas izsaukums WebAssembly/JavaScript \emph{callback}
+    funckiju padošanu ar visiem vajadzīgajiem parametriem -- jo vairāk šādas
+    komunikāciajs, jo lielāks leiks overheads rodas.
+    \item Canvas ,,2d" nav pietiekami jaudīgs priekš daudzu elementu reālā laika
+    zīmēšanas. WebGL būtu bijis labāks risinājums. Canvas ,,2d" API nespēj veikt
+    regulāru attēla atjaunošanu bez vizuāliem artefaktiem.
+    \item Darba autoram diez gan lielu apjukumu radīja tas, ka \(1 Task\neq 1 Thread\),
+    jo liela daļa no projekta bija strukurēta tieši uz šādu pieņēmumu. Tagad zinot
+    šo informāciju, maksimālais \emph{Region} skaits noteikti varētu tikt palielināts,
+    jo \emph{Region} instancēm ir daudzas bloķējošās darbības (gaidīšana uz
+    \emph{Mutex} atbrīvošanos). Tomēr vienmēr jāatstaj pietiekami daudz brīvie
+    resursi, lai OS varetu bez problēmām veikt \emph{data polling} un \emph{canvas}
+    pārzīmēšanu.
+    \item Multithreading aplikācijā, kur ir tikai vizuāla web saskarne, nav vajadzīgs.
+    Šādu sistēmu darba autors nekad neieteuktu nevienam likt uz serveriem.
+    Darba autors uzskata, ka vislabākais, lai šo aplikāciju tik tiešām arī kāds
+    varētu izmantot, būtu nepieciešams pārstrukurēt to kā 1 \emph{Region} aplikāciju
+    (bez multithreading) uz \emph{Blazor WebAssembly}. Varbūt, ja nākotnē C\#
+    atbalstīs arī jaunākus un eksperimentālākus standartus, tad integrācija ar
+    \emph{WebWorkers} būtu iespējama, lai veiktu ssitēmas paralelizāciju ar vairākiem
+    threadiem -- bet šobrīd tas vēl nav iespējams.
+    \item Darba autoram pipeline konstrukcija likās viselegantākais risinajums
+    šādai modulārai problēmai, it sevišķi izmantojot \emph{LINQ}, priekš īsāka un lasāmāka
+    koda. Ja otreiz būtu jātaisa šāda sistēma, tad šo koda
+    dizaina elementu noteikti arī nestu uz jauno sistēmu.
+    \item Mutex konstrukcija ir obligāti nepieciešama, lai taisītu aplikāciju
+    bez data-razes, tomēr C\# valoda ir konstruēta bez papildus kompilācijas
+    drošības nosacījumiem un Mutex izmantošana ir ,,programmētāja labākajās
+    interesēs bet ne obligāta", kas var rast daudzas dažādas kļūdas, ja kāds mainīgais
+    nav pareizi aizsargāts.
+\end{itemize}
+
+Darba autors uzskata, ka mūsdienās eksitē labāki alternatīvi šāda projekta
+izstrādei teju vai visos iespējamajos scenārijos. Tā arī būs visticamāk šī
+projekta nākotne -- mēgināt to implementēt ar citām valodām un rīkiem, lai veiktu
+salīdzinājumus.
