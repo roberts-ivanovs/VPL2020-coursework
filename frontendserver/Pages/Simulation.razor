@@ -111,13 +111,13 @@
                 </div>
                 <hr />
                 <div>
-                    <p>Number of cores
+                    <p>Number of regions
                         <b>
                             @(simulation == null ? "unknown" : this.simulation.NumberOfCores.ToString())
                         </b>
 
                         <input disabled="@(!inputsEnabled)" @bind="singleCore" type="checkbox" class="form-check-input" id="singleCore" autocomplete="off">
-                        <label class="form-check-label" for="singleCore">Use single core</label>
+                        <label class="form-check-label" for="singleCore">Force-use only 1 region</label>
                     </p>
                 </div>
                 <hr />
@@ -206,8 +206,6 @@
         var pipelines = new List<Pipeline>();
         if (tickingPipeline)
             pipelines.Add(new TickingPipeline());
-        if (geoLocationPipeline)
-            pipelines.Add(new GeoLocationPipeline());
         if (deathPipeline)
             pipelines.Add(new DeathPipeline());
         if (infectionPipeline)
@@ -222,6 +220,8 @@
             pipelines.Add(new ZombieModePipeline());
         if (quarantinePipeline)
             pipelines.Add(new QuarantinePipeline());
+        if (geoLocationPipeline)
+            pipelines.Add(new GeoLocationPipeline());
 
 
         /* Construct the World object */
