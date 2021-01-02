@@ -17,6 +17,7 @@ Lietotāju saskarne sastāv no divām lapām - pašas simulācijas (\ref{img:who
 att.) un ,,About" sadaļas (nav attēlots atskaitē).
 
 % Settings panelis
+\subsection{Iestatījumu panelis}
 
 ,,Settings" panelis ir galvenā vieta saskarnē, kur ir iespējams veikt sekojošās darbības:
 
@@ -30,6 +31,7 @@ att.) un ,,About" sadaļas (nav attēlots atskaitē).
 \end{itemize}
 
 % Canvas
+\subsection{Kartes komponente}
 
 \emph{Canvas} elements attēlo simulācijā esošos entītijus lietotājam. Ņemot vērā, ka
 simulācijas plaknes izmēri nesakrīt ar pikseļu dimensijām lietotāju saskarnes
@@ -38,6 +40,7 @@ simulācijas plaknes izmēri nesakrīt ar pikseļu dimensijām lietotāju saskar
 ir liels entītiju skaits -- \emph{canvas 2d context} nespēj pietiekami ātri
 uzzīmēt lielo elementu skaitu, rodas vizuāli artefakti. \emph{Canvas} elementus
 ar dažādiem simulāciajs stāvokļiem dažādās stadijās var apskatīt \ref{img:canvas-show-off} attēlā.
+Slimo entītiju krāsa mainās atkarībā no viņu veselības stāvokļa -- jo gaišāks, jo sliktāka veselība.
 
 \begin{figure}[H]%
     \centering
@@ -60,6 +63,7 @@ ar dažādiem simulāciajs stāvokļiem dažādās stadijās var apskatīt \ref{
 \end{figure}
 
 % Statistics
+\subsection{Statistikas komponente}
 
 Tā kā \emph{canvas} vizualizācija der tikai kā uzskates materiāls, \emph{Statistics}
 sadļa atļauj apskatīt to, kas notiek sistēmā ,,caur skaitļiem" (skat. \ref{img:statistics} att.).
@@ -77,6 +81,7 @@ izmaiņas pie dažādiem iestatījumiem.
 	\label{img:statistics}
 \end{figure}
 
+\subsection{Vairāku-kodolu stresa tests}
 % Max entities, no deaths, no nothing 1REGION vs 5 REGIONS
 Izmantojot šo informāciju, kas apskatāma \emph{Statistics} komponentē, var veikt
 nelielus testus esošajai programmai. Sākotnējais entītiju skaits tika uzlikts uz
@@ -90,11 +95,18 @@ ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
     \centering
     \subfloat
         [\centering Statistika ar 1 \emph{Region} instanci]
-        {{\includegraphics[width=.8\linewidth]{images/stress-statistics-single-sm.png} }}%
+        {{\includegraphics[width=.7\linewidth]{images/stress-statistics-single-sm.png} }}%
     \qquad
     \subfloat
         [\centering Statistika ar 5 \emph{Region} instancēm]
-        {{\includegraphics[width=.8\linewidth]{images/stress-stastiscs-multiple.png} }}%
+        {{\includegraphics[width=.7\linewidth]{images/stress-stastiscs-multiple.png} }}%
     \caption{Sistēmas stresa tests}
     \label{img:test-single-vs-mutlicore}%
 \end{figure}
+
+Uz šo informāciju, ko attēlo šī komponente ir jāvērtē tikai kā ,,ieskats". Katru
+reizi ģenerējot jaunu simulāciju, entītiji tiek uzģenerētei citās vietās, ar
+dažādiem parametriem, atraktori tiek definēti dažādos daudzumos un dažādās vietās.
+Protams, to visu ir iespējams statiski iekodēt kodā, lai tas nemainās, tomēr,
+izstradājot sistēmu, mērķis nebija veikt padziļinātu analīzi par paralelizācijas
+uzlabojumiem veiktspējā (ironiski, bet tiešī šī apakšadaļa to arī dara).
