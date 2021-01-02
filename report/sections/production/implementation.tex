@@ -1,5 +1,5 @@
 \subsubsection{DiseaseCore}
-
+\subsubsection*{Multithreading}
 Darba autors jau projekta plānošanas stadijā zināja, ka vēlēsies padziļināti
 izpētīt un apgūt \emph{multithreaded} aplikāciajs principus, tāpēc jau pašā sākumā
 centās saprast, kur projektā varētu iesaistīt dažādu asinhrono un paralēlo darbību.
@@ -53,6 +53,103 @@ vairākiem threadiem vienlaicīgi, datu integritāte tiek saglabāta. Izstrādes
 pareiza Mutex implementācija radīja daudzas kļūdas -- data races un deadlocks.
 
 % CHAPTER LINQ un Pipeline
+\subsubsection*{Pipeline}
+
+Lai sistēmā varētu nodrošināt funkciju modularitāti -- karantīna slimajiem,
+definēti kopīgie saskarsmes punkti, zombie mode, utt. -- bija nepieciešams
+izplānot kādā veidā šo funkcionalitāti varētu ieslēgt un izslēgt koda izpildes
+laikā. Darba autors izvēlējās funkciju kompozīcijas dizaina modeli --
+\emph{Pipelines}\cite{progr:pipelines}. Pirms tiek izveidota galvenā simulāciajs
+instance \emph{World}(\emph{World.cs}), ir jāinicializē \emph{List} ar
+\emph{Pipeline} (\emph{BasePipeline.cs}, skat. \ref{img:pipeline-iface})
+interfeisa implementējošām instancēm. Interfeisa definīcija apskatāma sekojošajā kodā:
+
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+    public interface Pipeline
+    {
+        void updateTimeScale(float timeScale);
+        PipelineReturnData pushThrough(
+            List<EntityOnMap<SickEntity>> currentSick,
+            List<EntityOnMap<HealthyEntity>> currentHealthy,
+            ulong timeDeltaMs
+        );
+    }
+\end{minted}
+}
+
+Objekts \emph{PipelineReturnData}, kuru atgriež \emph{pushThrough} funckija ir
+uzskatāms par \emph{type alias} \emph{Tuple<T, K>} mainīgajam
+
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+(List<EntityOnMap<SickEntity>>, List<EntityOnMap<HealthyEntity>>)
+\end{minted}
+}
+
+, jo C\# nepiedāvā valodas konstrukcij, kas atļautu definēt
+\emph{type alias}. Šajā gadījumā tas tika darīts, lai kods būtu lasāmāks.
+
+Talāk atliek tikai veidot klases, kas implementē šo interfeisu -- katrai sistēmas
+nepieciešamajai darbībai jāveido sava klases ar interfeisa implementāciju. Kopā
+tika izveidoti 8 dažādi \emph{pipeline} objekti:
+
+\begin{enumerate}
+    \item AttractorPipeline -- definē rutīnas entītijiem, vietas uz kuriem visi kopīgi dosies.
+    \item DeathPipeline -- izņem entītiju no saraksta, ja tā dzīvības ir sasniegušas 0.
+    \item GeoLocationPipeline -- ,,kustina" entītiju kartē, aprēķinot tā jauno
+        atrašanās vietu, zinot entītija virzienu, ātrumu, esošo lokāciju un pagājušo
+        laiku kopš iepriekšējā pipeline izsaukuma.
+    \item InfectionPipeline -- pārbauda kuri veselie entītiji ir blakus slimajam
+        entītijam un pārkonvertē tos uz jauniem slimniekiem.
+    \item QuarantinePipeline -- visus slimos entītijus novieto noteikta plaknes
+        stūrī, lai izslimotu savu slimību.
+    \item RecoveryPipeline -- ja slimais entītijs ir atveseļojies, tad pārkonvertē to uz veselo entītiju.
+    \item TickingPipeline -- ,,padzen" entītija iekšejo pulksteni uz priekšu (pārrēķina jaunu kustības virzienu, veselības stāvokli).
+    \item ZombieModePipeline -- liek visiem slimajiem entītijiem dzīties pakaļ vistuvākajam veselajam entītijam.
+    \item AssertionPipeline -- \emph{runtime} pārbaude vai visi entīija tipi ir
+        pareizi sadalīti (iepriekš komanda izmantoju bet gan dinamisku datu tipu
+        kāstošanu \emph{runtime} laikā ar tipu kāstošanu, tāpēc šis pipeline bija
+        noderīgs priekš kļūdu izķeršanas).
+\end{enumerate}
+
+Sistēmas izstrādes laikā ir jāpievērš arī pipeline secībai, jo katrs pipeline
+operē ar iepriekšējā pipeline modificētajiem datiem -- izmainot secību
+(vai arī izslēdzot/ieslēdzot kādu) var raasties dažādi iznākumi.
+
+Katrai sistēmas \emph{Region} instancei ir pieejams inicializētais \emph{List<Pipeline>}
+objekts, tad ar \emph{LINQ} palīdzību \emph{Region} izpildes ciklā tā iekšējos entītijus
+,,izpūš" cauri (\emph{Region.cs} failā):
+
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+    var current = sw.ElapsedMilliseconds;
+    var timeDeltaMS = (ulong)(current - previous);
+    /* Iterē cauri visiem pipeliniem */
+    var pipelineResult = pipelines.Aggregate(new PipelineReturnData
+    {
+        // Inicializē ar sākotnējām Region vērtībām
+        newHealthy = populationHealthy,
+        newSick = populationSick
+    },
+    (aggregate, pipeline) => pipeline.pushThrough(
+        aggregate.newSick, aggregate.newHealthy, timeDeltaMS
+        )
+    );
+
+    // Sagalbā izmainītās vērtības
+    populationSick = pipelineResult.newSick;
+    populationHealthy = pipelineResult.newHealthy;
+\end{minted}
+}
+
+Papildus uzsvars uz \emph{LINQ} izmantošanu šajā darba aprakstā netiks uzsvērts,
+jo tas tika izmantots pilnībā visās \emph{Pipeline} implementācijās, gandrīz vai
+visās simulāciajs funkcijas un pat UI saskarnē. Tika izmantotas dažādas šis
+funkcionālas paradigmas metodes -- \emph{Aggregate, Where, Select, ForEach, Concat, Min, Max, u.c.}.
 
 
 \subsubsection{frontendserver}
