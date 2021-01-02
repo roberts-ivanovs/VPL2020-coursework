@@ -61,6 +61,40 @@ ar dažādiem simulāciajs stāvokļiem dažādās stadijās var apskatīt \ref{
 
 % Statistics
 
+Tā kā \emph{canvas} vizualizācija der tikai kā uzskates materiāls, \emph{Statistics}
+sadļa atļauj apskatīt to, kas notiek sistēmā ,,caur skaitļiem" (skat. \ref{img:statistics} att.).
+Šī sadaļa ir sadalīta 3 kolonnās -- entītiju vispārīgā statistika, katra reģiona
+noslodze (tiek mērīta ar iterācijām sekundē, kur 1 iterācija ir visu reģiona entītiju
+izlaišana caur \emph{pipeline}, \emph{inbound} bufera pārbaude, entītiju ievietošana
+\emph{out of bounds} buferī), bet 3. kolonna ir vidējāis aritmētiskais visu reģionu
+noslodzei kopš simulācijas sākuma. Šie skaitļi atļauj ērti analizēt sistēmas
+izmaiņas pie dažādiem iestatījumiem.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.5]{images/statistics.png}
+	\caption{Statistikas sadaļa}
+	\label{img:statistics}
+\end{figure}
+
+% Max entities, no deaths, no nothing 1REGION vs 5 REGIONS
+Izmantojot šo informāciju, kas apskatāma \emph{Statistics} komponentē, var veikt
+nelielus testus esošajai programmai. Sākotnējais entītiju skaits tika uzlikts uz
+maksimālo, lai pēc iespējas vairāk noslogotu procesoru, tad tika palaista programma
+uz \~ 20 sekundēm, tikai ievākta informācija no sistemas. Šāda procedūra tika
+atkārtota, izmantojot 1 \emph{Region} un 5 \emph{Region} instances. Rezultātus
+ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
 
 
-% Screenshot no htop ka izpildās uz pilnu slodzi
+\begin{figure}[H]%
+    \centering
+    \subfloat
+        [\centering Statistika ar 1 \emph{Region} instanci]
+        {{\includegraphics[width=.8\linewidth]{images/stress-statistics-single-sm.png} }}%
+    \qquad
+    \subfloat
+        [\centering Statistika ar 5 \emph{Region} instancēm]
+        {{\includegraphics[width=.8\linewidth]{images/stress-stastiscs-multiple.png} }}%
+    \caption{Sistēmas stresa tests}
+    \label{img:test-single-vs-mutlicore}%
+\end{figure}
