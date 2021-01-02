@@ -200,7 +200,6 @@ namespace DiseaseCore
                 waitingData[procIndex].Start();
             }
             Task.WaitAll(waitingData);
-            SyncTaskCode();
 
             outOfBoundsLock.WaitOne();
             var populationHealthyList = populationHealthy
