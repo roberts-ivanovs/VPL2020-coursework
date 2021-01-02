@@ -1,4 +1,4 @@
-\subsubsection{DiseaseCore}
+\subsubsection{,,DiseaseCore" pakotne}
 \subsubsection*{Multithreading}
 Darba autors jau projekta plānošanas stadijā zināja, ka vēlēsies padziļināti
 izpētīt un apgūt \emph{multithreaded} aplikāciajs principus, tāpēc jau pašā sākumā
@@ -140,7 +140,7 @@ objekts, tad ar \emph{LINQ} palīdzību \emph{Region} izpildes ciklā tā iekš�
         )
     );
 
-    // Sagalbā izmainītās vērtības
+    // Saglabā izmainītās vērtības
     populationSick = pipelineResult.newSick;
     populationHealthy = pipelineResult.newHealthy;
 \end{minted}
@@ -152,9 +152,58 @@ visās simulāciajs funkcijas un pat UI saskarnē. Tika izmantotas dažādas ši
 funkcionālas paradigmas metodes -- \emph{Aggregate, Where, Select, ForEach, Concat, Min, Max, u.c.}.
 
 
-\subsubsection{frontendserver}
+\subsubsection{,,frontendserver" pakotne}
 
 % Blazor UI kontrolē pipelines un instanciēšanu
-% Notiek viss paralēlisms uz servera
+
+Lietotaju saskarne ir programmēta ar \emph{Blazor} ietvaru. Sākotnēji darba
+autors vēlējas izmantot \emph{Blazor WebAssembly} \emph{dotnet template} versiju,
+lai varētu visu projektu kā SPA\cite{progr:SPA} uz statiskā faila servera. Tomēr
+pašreizējā Blazor versija nepiedāvā vairāku procesu paralelizācijas iespējas
+(tikai \emph{concurrent} iespējamību, izmantojot vienu threadu, kas arī ir
+izmantots priekš pārlūkprogrammas UI zīmēšanas)\cite{csharp:blazor-no-multithreaded-support}. Lai gan
+visi WEB brosweri kopš 2020 gada vasaras atbalsta \emph{WebAssembly Threads}
+priekšlikumu \cite{wasm:threads-proposal}, tomēr to ir nepieciešams atsevišķi
+,,ieslēgt" caur pārlukprogrammas iestatījumiem. Kā arī \emph{Blazor WebAssembly} neatbalsta vairāku
+sistēmas \emph{threadu} izveidi. Šī iemesla dēļ tika izmantots \emph{Blazor Server}
+versija, kur visa UI apstrāde (arī simulācijas palaišana) notiek \textbf{uz servera}. Šāda
+pieeja gan nozīmē, to, ka reāli uz serveriem šo sistēmu likt nav laba doma -- jo
+vairāk cilvēkie pieslēgsies un veiks simulācijas, jo lielāka slodze. Tomēr tā ir
+problēma ārpus šī kursadarba ietvariem.
+
 % Canvas pakotne
+Pati attēla zīmēšana tiek veikta ar uz \emph{HTML5 Canvas} elementa\cite{html5:canvas}.
+Šis elements piedāvā JavaScript API, lai zīmētu rēala laika grafikas, attēlus, animācijas.
+Tiek piedāvāti dažādi veidi kādu API izmantot -- ,,2d", ,,webgl", ,,webgl2",
+,,bitmaprenderer" \cite{html5:canvas-contexts}. Tomēr šie ir JavaScript API, lai
+no C\# tos izsauktu, ir nepieciešams izveidot ,,wrapper" funkcijas šim JS API,
+nodrošinot starp-valodu komunikāciju. Tomēr ir jau izveidots Blazor extensions,
+kas nodrošina šo JavaScript API wrapper funckijas -- \emph{BlazorExtensions.Canvas}
+(\url{https://github.com/BlazorExtensions/Canvas}).
+Darba autors jau iepriekš bija darbojies ar WebGL, kas nodrošinātu ātru un efektīvu
+zīmējuma veidošanu un atjaunināšanu, tomēr šī \emph{BlazorExtensions.Canvas} bibliotēkas
+dokumentācijā aprakstītais WebGL piemērs nestrādāja -- tāpēc darba izstrādē tika
+izmantots ,,2d" context API.
+
 % Data polling
+Ņemot vērā, inicializējot un uzstartējot simulāciju, tā faktiski iet atsevišķā
+sistēmas threadā, tad no lietotāju saskarnes puses nav viens konkrēts moments, kad
+varētu iegūt visas nepieciešamās vērtības par esošajiem entītijiem sistēmā. Risinājums
+ir izmantot tādu kā \emph{data polling}\cite{progr:data-polling}. Koda sekvences
+diagrammu ir iespējams aplūkot \ref{img:squance-diagram-get-status} attēlā. Katrā
+datu pieprasījuma reizē ir nepieciešams nopauzēt (iekšējais mainīgais, kas raksturo esošo stāvokli) visas \emph{Region} instances,
+lai nenotiktu \emph{data races}, nepieciešams nopauzēt pašu \emph{World} instanci (lai
+,,OutOfBounds" sinhronizācija nenotiktos datu nolases brīdī), tad nepieciešams apkopot
+datus no visām datu krātuvēm, atpauzēt visas instances, atgriezt datus lietotāju saskarnei.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.7]{images/DiseaseCore-GetData.png}
+	\caption{Simulācijas datu stāvokļa vaicājuma izpilde}
+	\label{img:squance-diagram-get-status}
+\end{figure}
+
+Tālāk šie iegūtie dati Blazor pusē tiek papildus sadalīti: metadati tiek nodoti
+\emph{Statistics} komponentei, kas aprēķina katra \emph{Region} ātrdarbību, bet
+reāli dati par entītiju stāvokļiem tiek nodota \emph{Canvas} komponentei, kur
+entītiji tiek sašķiroti un katrs uzzīmēts uz \emph{HTML canvas}.
