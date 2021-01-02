@@ -18,8 +18,8 @@ simulējamajiem entītijiem.
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[scale=0.7]{images/multithreaded-layout.png}
-	\caption{Iterācijas vērtība}
+	\includegraphics[scale=0.5]{images/multithreaded-layout.png}
+	\caption{Reģionu sadalījums plaknei}
 	\label{img:multithreaded-layout}
 \end{figure}
 
@@ -36,15 +36,24 @@ katram Reģionam būtu vienāds darbības laukums nepāra skaitļiem varētu ras
 Darba autors \textbf{neizmanto visus pieejamos procesora kodolus}, jo šādā gadījumā
 procesors tiek pārslogots un netiek veikta responsīva UI updeitošanās (par to
 vēlāk tiks aprakstīts) -- tāpēc tiek izmantota tiaki \(\frac{2}{3}\) no
-pieejamajiem procesora kodoliem (vai sliktākajā gadījuma 1 kodols).
+pieejamajiem procesora kodoliem (vai sliktākajā gadījuma 1 kodols). Šī iemesla dēļ
+\ref{img:multithreaded-layout} attēlā ir parādīti 5 reģioni/5 taski/ \(\frac{2}{3}\) no 8 kodolu sistēmas.
 
 Lai gan, ņemot vērā, ka \(1 Task\neq 1 Thread\), jo Taski izpildās uz .NET Runtime
-pieejama threadpoola, tad reali definēt vairāk Tasksus arī ir iespējams, jo visi
-threadu dalītie resursi tiek ,,aizsargāti" ar \emph{Mutex}\cite{csharp:mutex} instancēm, kas dod
-iespēju .NET Runtime izmantot esošo threadu, lai darītu \emph{concurrent}\cite{csharp:concurrent-parallel} darbības,
-nevis tukši gaidītu.
+pieejama threadpoola\cite{csharp:tasks-not-threads}, tad reāli definēt vairāk
+Tasksus arī ir iespējams -- runtime definētie threadi (mēdz saukt arī par
+\emph{green threads}\cite{progr:green-threads}) izpildās
+userspace\cite{sys:userspace}, nevis sistēmas kerneļa līmenī, kas .NET Runtime
+atļauj pašam izlemt, kad darīt \emph{concurrent vai paralēlas}\cite{csharp:concurrent-parallel} darbības.
+Tasku menedžošana
+\emph{userspacā} ir daudz ātrāka nekā zemā līmeņa kerneļa threadu veidošana un izsaukšāna, atļaujot OS to menedžot.
+Visi \emph{tasku} dalītie resursi tiek ,,aizsargāti" ar \emph{Mutex}\cite{csharp:mutex}
+instancēm, kas garantē to, ka informācija (aizsargātais mainīgias) netiks vienlaicīgi lasīta/rakstīta no
+vairākiem threadiem vienlaicīgi, datu integritāte tiek saglabāta. Izstrādes procesā
+pareiza Mutex implementācija radīja daudzas kļūdas -- data races un deadlocks.
 
 % CHAPTER LINQ un Pipeline
+
 
 \subsubsection{frontendserver}
 
