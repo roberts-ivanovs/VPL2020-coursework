@@ -11,6 +11,10 @@ namespace DiseaseCore
     public interface Pipeline
     {
         void updateTimeScale(float timeScale);
-        PipelineReturnData pushThrough(List<EntityOnMap<SickEntity>> currentSick, List<EntityOnMap<HealthyEntity>> currentHealthy, ulong timeDeltaMs);
+        PipelineReturnData pushThrough(
+            List<EntityOnMap<SickEntity>> currentSick,
+            List<EntityOnMap<HealthyEntity>> currentHealthy,
+            ulong timeDeltaMs
+        );
     }
 }
