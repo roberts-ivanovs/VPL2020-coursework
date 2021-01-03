@@ -134,8 +134,12 @@ Fails \texttt{World.cs}
         foreach (var item in outOfBoundsPopulationSick)
         {
             // Normalise the location
-            item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
-            item.location.X = Math.Min(Math.Max(item.location.X, 1), World.MaxCoords.X - 1);
+            item.location.Y = Math.Min(
+                Math.Max(item.location.Y, 1),
+                World.MaxCoords.Y - 1);
+            item.location.X = Math.Min(
+                Math.Max(item.location.X, 1),
+                World.MaxCoords.X - 1);
             // Place each item in its appropriate placeholder data container
             int index = item.location.X / deltaX;
             index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
@@ -168,7 +172,7 @@ Fails \texttt{World.cs}
 
 
 
-\section{Galvenā polling funkcija no Blazor koda}
+\section{Galvenā polling funkcija no simulācijas koda}
 \label{app:polling-world}
 Fails \texttt{World.cs}
 {
