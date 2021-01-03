@@ -64,29 +64,12 @@ izplānot kādā veidā šo funkcionalitāti varētu ieslēgt un izslēgt koda i
 laikā. Darba autors izvēlējās funkciju kompozīcijas dizaina modeli --
 \emph{Pipelines}\cite{progr:pipelines}. Pirms tiek izveidota galvenā simulācijas
 instance \emph{World}(fails \emph{World.cs}), ir jāinicializē \emph{List} ar
-\emph{Pipeline} (fails \emph{BasePipeline.cs})
+\emph{Pipeline} (fails \emph{BasePipeline.cs}, skat. \ref{app:IPipeline} pielikumā)
 interfeisa implementējošām instancēm. Interfeisa definīcija apskatāma sekojošajā kodā:
-
-% TODO Pārvietot uz appendix
-{
-\setstretch{1}
-\begin{minted}{CSharp}
-    public interface Pipeline
-    {
-        void updateTimeScale(float timeScale);
-        PipelineReturnData pushThrough(
-            List<EntityOnMap<SickEntity>> currentSick,
-            List<EntityOnMap<HealthyEntity>> currentHealthy,
-            ulong timeDeltaMs
-        );
-    }
-\end{minted}
-}
 
 Objekts \emph{PipelineReturnData}, kuru atgriež \emph{pushThrough} funkcija ir
 uzskatāms par \emph{type alias} \emph{Tuple<T, K>} mainīgajam:
 
-% TODO Pārvietot uz appendix
 {
 \setstretch{1}
 \begin{minted}{CSharp}
@@ -130,31 +113,7 @@ operē ar iepriekšējā pipeline modificētajiem datiem -- izmainot secību
 
 Katrai sistēmas \emph{Region} instancei ir pieejams inicializētais \emph{List<Pipeline>}
 objekts, tad ar \emph{LINQ} palīdzību \emph{Region} izpildes ciklā tā iekšējos entītijus
-,,izlaiž" cauri \emph{pipeline} sarakstam (\emph{Region.cs} failā):
-
-% TODO Pārvietot uz appendix
-{
-\setstretch{1}
-\begin{minted}{CSharp}
-    var current = sw.ElapsedMilliseconds;
-    var timeDeltaMS = (ulong)(current - previous);
-    /* Iterē cauri visiem pipeliniem */
-    var pipelineResult = pipelines.Aggregate(new PipelineReturnData
-    {
-        // Inicializē ar sākotnējām Region vērtībām
-        newHealthy = populationHealthy,
-        newSick = populationSick
-    },
-    (aggregate, pipeline) => pipeline.pushThrough(
-        aggregate.newSick, aggregate.newHealthy, timeDeltaMS
-        )
-    );
-
-    // Saglabā izmainītās vērtības
-    populationSick = pipelineResult.newSick;
-    populationHealthy = pipelineResult.newHealthy;
-\end{minted}
-}
+,,izlaiž" cauri \emph{pipeline} sarakstam (\emph{Region.cs} failā, skat. \ref{app:pipelien-linq} pielikumā):
 
 Papildus uzsvars uz \emph{LINQ} izmantošanu šajā kursa darba atskaitē nebūs veikts,
 jo tas tika izmantots pilnībā visās \emph{Pipeline} implementācijās, gandrīz vai

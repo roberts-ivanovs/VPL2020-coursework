@@ -1,0 +1,42 @@
+\section{Pipeline interfeiss}
+\label{app:IPipeline}
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+    public interface Pipeline
+    {
+        void updateTimeScale(float timeScale);
+        PipelineReturnData pushThrough(
+            List<EntityOnMap<SickEntity>> currentSick,
+            List<EntityOnMap<HealthyEntity>> currentHealthy,
+            ulong timeDeltaMs
+        );
+    }
+\end{minted}
+}
+
+\section{Pipeline datu izfiltrēšana ar LINQ}
+\label{app:pipelien-linq}
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+    /* Izrēķina laika starpību kopš iepriekšējās iterāciajs */
+    var current = sw.ElapsedMilliseconds;
+    var timeDeltaMS = (ulong)(current - previous);
+    /* Iterē cauri visiem pipeliniem */
+    var pipelineResult = pipelines.Aggregate(new PipelineReturnData
+    {
+        // Inicializē ar sākotnējām Region vērtībām
+        newHealthy = populationHealthy,
+        newSick = populationSick
+    },
+    (aggregate, pipeline) => pipeline.pushThrough(
+        aggregate.newSick, aggregate.newHealthy, timeDeltaMS
+        )
+    );
+
+    // Saglabā izmainītās vērtības
+    populationSick = pipelineResult.newSick;
+    populationHealthy = pipelineResult.newHealthy;
+\end{minted}
+}
