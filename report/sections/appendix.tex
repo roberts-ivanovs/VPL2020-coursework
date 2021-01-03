@@ -1,5 +1,7 @@
 \section{Pipeline interfeiss}
 \label{app:IPipeline}
+
+Fails \texttt{BasePipeline.cs}
 {
 \setstretch{1}
 \begin{minted}{CSharp}
@@ -17,6 +19,7 @@
 
 \section{Pipeline datu izfiltrēšana ar LINQ}
 \label{app:pipelien-linq}
+Fails \texttt{Region.cs}
 {
 \setstretch{1}
 \begin{minted}{CSharp}
@@ -38,5 +41,219 @@
     // Saglabā izmainītās vērtības
     populationSick = pipelineResult.newSick;
     populationHealthy = pipelineResult.newHealthy;
+\end{minted}
+}
+
+\section{Simulācijas inicializācija no Blazor}
+\label{app:init-simulation}
+Fails \texttt{Simulation.razor}
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+    // Funkcija tiek izsaukta uzspiežot uz UI pogas
+    async void StartSimulation()
+    {
+        /* Construct the pipelines */
+        var pipelines = new List<Pipeline>();
+        if (tickingPipeline) //<-- `bool` flags avaialble as checkboxes in the UI
+            pipelines.Add(new TickingPipeline());
+        if (deathPipeline)
+            pipelines.Add(new DeathPipeline());
+        if (infectionPipeline)
+            pipelines.Add(new InfectionPipeline());
+        /// .... Šādi iziet cauri visiem pieejamajiem pipeline....
+
+        /* Construct the World object */
+        simulation = new World(
+            (ushort)(InitialPopulation - InitialSickPeople),
+            InitialSickPeople,
+            TimeScale,
+            singleCore,
+            pipelines);
+        simulation.Start();
+        /// ... Papildus algoritmam nesvarīgas darbības ...
+    }
+\end{minted}
+}
+
+
+\section{Galvenā polling funkcija no Blazor koda}
+\label{app:polling}
+Fails \texttt{Simulation.razor}
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+
+// Šī funkcija iegūst informāciju no simulācijas
+async Task ReloadInformation()
+{
+    await Task.Run(async () =>
+        {
+        var sw = new Stopwatch();
+        sw.Start();
+        var before = 0L;
+        while (!startButtonEnabled)
+        {
+            var now = sw.ElapsedMilliseconds;
+            var rerender = now - before > renderCanvasAfterEveryMiliseconds;
+            // Veic darbību tikai tad, ja nepieciešamais laika
+            // diapozons ir sasniegts
+            if (rerender)
+            {
+                before = now;
+                var gameState = simulation.GetCurrentState();
+                /* Adjust the timing to be `loops per second` */
+                var loopsPerSecond = gameState.loopsDone
+                    .Select(
+                        x => x * 1000 / (ulong)renderCanvasAfterEveryMiliseconds
+                    )
+                    .ToArray();
+                simulation.timeScale = TimeScale;
+                // atjauno vizuālo informāciju UI komponentēs
+                await _statistics.setNewData(
+                    gameState.sickPeople,
+                    gameState.healthyPeople,
+                    loopsPerSecond);
+                await EntityCanvas.DisplayItems(gameState.items);
+            }
+        }
+    });
+}
+\end{minted}
+}
+
+\section{,,Out of bounds" Entītiju kārtošanas mehānisms }
+\label{app:out-of-bounds-sorting}
+Fails \texttt{World.cs}
+{
+    \setstretch{1}
+    \begin{minted}{CSharp}
+        // ...
+        // Iterate over all `outOfBoundsPopulation` and
+        // figure out where should each item be placed
+        foreach (var item in outOfBoundsPopulationSick)
+        {
+            // Normalise the location
+            item.location.Y = Math.Min(Math.Max(item.location.Y, 1), World.MaxCoords.Y - 1);
+            item.location.X = Math.Min(Math.Max(item.location.X, 1), World.MaxCoords.X - 1);
+            // Place each item in its appropriate placeholder data container
+            int index = item.location.X / deltaX;
+            index = Math.Min(Math.Max(index, 0), regionManagers.Length - 1);
+            inboundSick[index].Add(item);
+        }
+        // NOTE: The same algorithm is used for healthy entities as well
+        // ...
+        outOfBoundsPopulationHealthy.Clear();
+        outOfBoundsPopulationSick.Clear();
+        // Place each item in its appropriate thread
+        for (int i = 0; i < regionManagers.Length; ++i)
+        {
+            if ((inboundSick[i].Count() > 0 || inboundHealthy[i].Count() > 0) && regionManagers[i].inboundAccess.WaitOne())
+            {
+                regionManagers[i].inboundSick.AddRange(inboundSick[i]);
+                regionManagers[i].inboundHealthy.AddRange(inboundHealthy[i]);
+                regionManagers[i].inboundAccess.ReleaseMutex();
+            }
+            else
+            {
+                // Try appending the inbound item later
+                outOfBoundsPopulationSick.AddRange(inboundSick[i]);
+                outOfBoundsPopulationHealthy.AddRange(inboundHealthy[i]);
+            }
+        }
+        outOfBoundsLock.ReleaseMutex();
+        // ...
+    \end{minted}
+}
+
+
+
+\section{Galvenā polling funkcija no Blazor koda}
+\label{app:polling-world}
+Fails \texttt{World.cs}
+{
+\setstretch{1}
+\begin{minted}{CSharp}
+
+// Šī funkcija iegūst informāciju no simulācijas
+public GameState GetCurrentState()
+{
+    this.SimState = SimulationState.PAUSED;
+    ulong[] loopsDone = new ulong[regionManagers.Length];
+    List<EntityOnMap<HealthyEntity>>[] populationHealthy = new List<
+        EntityOnMap<HealthyEntity>>[regionManagers.Length];
+    List<EntityOnMap<SickEntity>>[] populationSick = new List<
+        EntityOnMap<SickEntity>>[regionManagers.Length];
+    pipelines.ForEach(x => x.updateTimeScale(timeScale));
+    // Pause all simulations
+    for (int i = 0; i < regionManagers.Length; ++i)
+    {
+        regionManagers[i].SimState = SimulationState.PAUSED;
+    }
+
+    // Asynchronously extract the current state from each running task
+    // Because the Region Tasks are still in the middle of a aloop right now
+    Task[] waitingData = new Task[regionManagers.Length];
+    for (int i = 0; i < regionManagers.Length; ++i)
+    {
+        int procIndex = i;
+        waitingData[procIndex] = new Task(() =>
+        {
+            var item = regionManagers[procIndex].getEntities();
+            populationSick[procIndex] = item.Item1;
+            populationHealthy[procIndex] = item.Item2;
+            loopsDone[procIndex] = item.Item3;
+        });
+        waitingData[procIndex].Start();
+    }
+    Task.WaitAll(waitingData);
+
+    // SyncTaskCode() Task may still be running, therefore we lock it out
+    // compeltely.
+    outOfBoundsLock.WaitOne();
+    var populationHealthyList = populationHealthy
+        .Aggregate(
+            new List<EntityOnMap<HealthyEntity>>(),
+            (current, next) =>
+            {
+                current.AddRange(next);
+                return current;
+            }
+        )
+        .Concat(outOfBoundsPopulationHealthy)
+        .ToList();
+    var populationSickList = populationSick
+        .Aggregate(
+            new List<EntityOnMap<SickEntity>>(),
+            (current, next) =>
+            {
+                current.AddRange(next);
+                return current;
+            }
+        )
+        .Concat(outOfBoundsPopulationSick)
+        .ToList();
+    outOfBoundsLock.ReleaseMutex();
+
+    // Resume all paused states
+    this.SimState = SimulationState.RUNNING;
+    for (int i = 0; i < regionManagers.Length; ++i)
+    {
+        regionManagers[i].SimState = SimulationState.RUNNING;
+    }
+
+    // Gather metadata
+    var sickPeople = (ushort)populationSickList.Count();
+    var healthyPeople = (ushort)populationHealthyList.Count();
+
+    // Return the result
+    return new GameState
+    {
+        loopsDone = loopsDone,
+        items = (populationSickList, populationHealthyList),
+        sickPeople = sickPeople,
+        healthyPeople = healthyPeople,
+    };
+}
 \end{minted}
 }

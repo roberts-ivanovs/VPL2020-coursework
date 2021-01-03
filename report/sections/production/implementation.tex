@@ -16,7 +16,8 @@ ievietots \emph{Out of bounds} buferī (kopīgs visām \emph{Region} instancēm)
 regulāri apstrādā cita \emph{Task} instance - katrs entītijs šajā \emph{Out of bounds} buferī tiek
 izvērtēts pēc tā atrašanās vietas (pa \(x\) asi) un tiek novietos attiecīgā \emph{Region}
 \emph{inbound} buferī, kuru brīvā brīdī noteiktā \emph{Region} pārvaldošais \emph{Task} pievienos
-simulējamajiem entītijiem.
+simulējamajiem entītijiem. Šo entītiju kārtošanas kodu var apskatīt
+\ref{app:out-of-bounds-sorting} pielikumā.
 
 
 \begin{figure}[H]
@@ -159,12 +160,16 @@ dokumentācijā aprakstītais WebGL piemērs nestrādāja -- tāpēc darba izstr
 izmantots ,,2d" \emph{context API}.
 
 % Data polling
-Inicializējot un uzstartējot simulāciju, tā darbojas atsevišķā
+Inicializējot un uzstartējot simulāciju (skat. \ref{app:init-simulation} pielikumā), tā darbojas atsevišķā
 sistēmas \emph{threadā} no \emph{UI} saskarnes -- no lietotāju saskarnes puses nav
 viens konkrēts moments, kad
 varētu iegūt visas nepieciešamās vērtības par esošajiem entītijiem sistēmā. Risinājums
-ir izmantot tādu kā \emph{data polling}\cite{progr:data-polling} pieeju. Koda sekvences
-diagrammu priekš izveidotās \emph{data polling} metodes ir iespējams aplūkot \ref{img:squance-diagram-get-status} attēlā. Katrā
+ir izmantot tādu kā \emph{data polling}\cite{progr:data-polling} pieeju. pats Blazor koda \emph{polling}
+pieeja ir apskatāma \ref{app:polling} pielikumā, bet simulācijas atbildi uz šo
+vaicājumu var apskatīt \ref{app:polling-world} pielikumā. Koda sekvences
+diagrammu priekš izveidotās \ref{app:polling-world} pielikuma metodes ir iespējams
+aplūkot \ref{img:squance-diagram-get-status}
+attēlā, bet pielikumā. Katrā
 datu pieprasījuma reizē ir nepieciešams nepauzēt (iekšējais mainīgais, kas raksturo esošo stāvokli) visas \emph{Region} instances,
 lai nenotiktu \emph{data races}, nepieciešams nepauzēt pašu \emph{World} instanci (lai
 \emph{OutOfBounds} sinhronizācija nenotiktos datu nolases brīdī), tad nepieciešams apkopot
