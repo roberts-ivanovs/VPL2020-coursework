@@ -1,57 +1,76 @@
-Darba autors uzskata, ka izstradātā sistēma dara tieši to, ko sākotnēji bija
-definējis kā galveno mērķi -- \emph{veikt slimības izplatības modelēšanu}. Kā arī
-galvenie apakšuzdevumi ir izpildīti -- ir nodrošināta vizuālā saskarne, iespēja
-konfigurēt sistēmu un izpētīt slimības apturošos mehānismsus (karantīnas \emph{pipeline}).
+Darba autors uzskata, ka izstrādātā sistēma izpilda izvirzīto galveno mērķi
+-- \emph{veikt slimības izplatības modelēšanu}. Kā arī
+galvenie uzdevumi ir izpildīti -- ir nodrošināta vizuālā saskarne, iespēja
+konfigurēt sistēmu un izpētīt slimības ierobežojošus mehānismus (karantīnas \emph{pipeline}).
 
 Tomēr, darbu izstrādāt nebija viegli un darba autoram ir vairākas atziņas, kuras
-var veikt, gan par pašu projektu, gan C\# kā valodu un .NET ekosistemu un WebAssembly.
+var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosistemu} un \emph{WebAssembly}.
 
 \begin{itemize}
     \item Darba autora primārā koda rakstīšanas vide is Visual Studio Code, kas
-    nodrošina OmniSharp C\# valodas serveri priekš C\# koda, bet \emph{Razor} koda
+    nodrošina \emph{OmniSharp C\#} valodas serveri priekš \emph{C\#} koda intellisense,
+    bet \emph{Razor} koda
     failu apstrāde lika tam regulāri pēkšņi pārtraukt darbību. Diemžēl cita alternatīva
-    nebija. Visos pārējos failos tas strādāja ideāli, tomēr laikam tieši šim projektam
-    (Blazor/Razor) OmniSharp ir nepieciešama papildus izstrāde.
-    \item Darba autors nevarēja atrast labu koda stila linteri, kuru būtu iespējams
-    palaist pat no komandrindas, kas pieturētos pie C\# dokumentācijā aprakstītā labā koda stila % TODO reference here
-    \item Integrācija ar interneta pārlūkprogrammu no C\# koda ir ļoti slikta.
-    Eksistē tiaki viena bibliotēka -- \emph{BlazorExtensions.Canvas} --, kas
-    nodrošina pieeju priekš \emph{HTML canvas}, kur WebGL API nestrādāja (varbūt
-    tā ir darba autora paša vaina?).
+    nebija. Visos pārējos failos \emph{OmniSharp} strādāja ideāli, tomēr laikam tieši šim projektam
+    \emph{(Blazor/Razor) OmniSharp} ir nepieciešama papildus uzmanība pilnīgam atbalstam.
+
+    \item Darba autors nevarēja atrast labu koda stila \emph{linteri}, kuru būtu iespējams
+    palaist no komandrindas, kas pieturētos pie \emph{C\#} dokumentācijā aprakstītā labā koda stila\cite{csharp:code-conventions}.
+
+    \item \emph{Blazor} vēl nav reālas produkcijai gatavs risinājums priekš \emph{WebAssembly}.
+    Bibliotēku atbalsts priekš \emph{DOM manipulāciajs} un \emph{JS API} ir niecīgs, reti uzturētas.
+    Piemēram, vienīgā \emph{Canvas JS wrapper} bibliotēkai -- \emph{BlazorExtensions.Canvas} --
+    nestrādāja \emph{WebGL API} (varbūt tā ir darba autora paša vaina? Tomēr
+    dokumentācijā nekas nebija padziļināti par to rakstīts). Mūsdienās citām programmēšanas valodām kā \emph{Rust}
+    ir daudz labāki risinājumi, piedāvājot \textbf{vairākas} alternatīvas \emph{OSS}
+    bibliotēkas priekš \emph{JS API}, padziļinātu dokentāciju visam,
+    \emph{WebAssembly} atbalsts kompilatoram ir \emph{first class citizen}, iespēju
+    ērti veikt \emph{client-side multithreaded} darbus. C\# ekosistēmai un it
+    sevišķi \emph{Blazor} vēl ir kur tiekties.
+
     \item Tā kā \emph{HTML canvas} ir
-    JavaScript API, tad katrs funkcijas izsaukums WebAssembly/JavaScript \emph{callback}
-    funckiju padošanu ar visiem vajadzīgajiem parametriem -- jo vairāk šādas
-    komunikāciajs, jo lielāks leiks overheads rodas.
-    \item Canvas ,,2d" nav pietiekami jaudīgs priekš daudzu elementu reālā laika
-    zīmēšanas. WebGL būtu bijis labāks risinājums. Canvas ,,2d" API nespēj veikt
-    regulāru attēla atjaunošanu bez vizuāliem artefaktiem.
-    \item Darba autoram diez gan lielu apjukumu radīja tas, ka \(1 Task\neq 1 Thread\),
-    jo liela daļa no projekta bija strukurēta tieši uz šādu pieņēmumu. Tagad zinot
-    šo informāciju, maksimālais \emph{Region} skaits noteikti varētu tikt palielināts,
-    jo \emph{Region} instancēm ir daudzas bloķējošās darbības (gaidīšana uz
-    \emph{Mutex} atbrīvošanos). Tomēr vienmēr jāatstaj pietiekami daudz brīvie
-    resursi, lai OS varetu bez problēmām veikt \emph{data polling} un \emph{canvas}
-    pārzīmēšanu.
-    \item Multithreading aplikācijā, kur ir tikai vizuāla web saskarne, nav vajadzīgs.
-    Šādu sistēmu darba autors nekad neieteuktu nevienam likt uz serveriem.
+    \emph{JavaScript API}, tad katrs funkcijas izsaukums veic \emph{WebAssembly/JavaScript callback}
+    funkciju padošanu ar vērtību klonēšanu -- jo vairāk šādas komunikācijas, jo
+    lielāks leiks overheads rodas. (Viens no faktoriem kāpēc \emph{canvas refresh rate} ir tik zems).
+
+    \item \emph{Canvas ,,2d"} nav pietiekami jaudīgs priekš daudzu elementu reālā laika
+    zīmēšanas. \emph{WebGL} būtu bijis labāks risinājums. \emph{Canvas ,,2d"} API nespēj veikt
+    ātru, regulāru, liela apjoma datu attelu atjaunošanu bez vizuāliem artefaktiem.
+
+    \item \emph{Multithreading} aplikācijā, kur ir tikai vizuāla \emph{WEB} saskarne, nav vajadzīgs.
+    Šādu sistēmu darba autors nekad neieteiktu nevienam likt uz serveriem.
     Darba autors uzskata, ka vislabākais, lai šo aplikāciju tik tiešām arī kāds
-    varētu izmantot, būtu nepieciešams pārstrukurēt to kā 1 \emph{Region} aplikāciju
-    (bez multithreading) uz \emph{Blazor WebAssembly}. Varbūt, ja nākotnē C\#
-    atbalstīs arī jaunākus un eksperimentālākus standartus, tad integrācija ar
-    \emph{WebWorkers} būtu iespējama, lai veiktu ssitēmas paralelizāciju ar vairākiem
-    threadiem -- bet šobrīd tas vēl nav iespējams.
-    \item Darba autoram pipeline konstrukcija likās viselegantākais risinajums
-    šādai modulārai problēmai, it sevišķi izmantojot \emph{LINQ}, priekš īsāka un lasāmāka
-    koda. Ja otreiz būtu jātaisa šāda sistēma, tad šo koda
-    dizaina elementu noteikti arī nestu uz jauno sistēmu.
-    \item Mutex konstrukcija ir obligāti nepieciešama, lai taisītu aplikāciju
-    bez data-razes, tomēr C\# valoda ir konstruēta bez papildus kompilācijas
-    drošības nosacījumiem un Mutex izmantošana ir ,,programmētāja labākajās
+    varētu izmantot, būtu nepieciešams pārstrukturēt to kā 1 \emph{Region} aplikāciju
+    (bez \emph{multithreading}) uz \emph{Blazor WebAssembly}, zīmēšanu veikt ar
+    \emph{WebGL}, lai zīmējuma atjaunošanās būtu ātrāka. Varbūt, ja nākotnē \emph{C\#}
+    atbalstīs arī jaunākus \emph{WEB} standartus, tad integrācija ar
+    \emph{WebWorkers} būtu iespējama, lai veiktu sistēmas paralelizāciju ar vairākiem
+    \emph{threadiem} -- bet šobrīd tas vēl nav iespējams.
+
+    \item Būtu vērtīgi izpētīt, vai visu atjaunošanās procesu varētu veikt ar
+    \emph{requestAnimationFrame}\ref{web:req-anim-frame}. Jo pašreiz visa \emph{Canvas}
+    zīmēsana notiek uz galvenā \emph{UI threada}, šis varētu būt pirmais
+    optimizaciajs veids, bet tam ir nepieciešama papildus \emph{JavaScript} ,,līme".
+
+    \item Darba autoram \emph{pipeline} konstrukcija likās kā ļoti elegants risinājums
+    sistēmas modularitātes problēmai, it sevišķi izmantojot \emph{LINQ}, priekš īsāka un lasāmāka
+    koda. Ja otrreiz būtu jātaisa šāda sistēma, tad šo koda dizaina elementu
+    noteikti arī dublētu jaunajā sistēmā.
+
+    \item \emph{Mutex} konstrukcija ir obligāti nepieciešama, lai taisītu aplikāciju
+    bez \emph{data-races}, tomēr \emph{C\#} valoda ir konstruēta bez papildus kompilācijas
+    drošības nosacījumiem un \emph{Mutex} izmantošana ir ,,programmētāja labākajās
     interesēs bet ne obligāta", kas var rast daudzas dažādas kļūdas, ja kāds mainīgais
-    nav pareizi aizsargāts.
+    nav pareizi aizsargāts. Mūsdienās modernākām valodām kā \emph{Rust} un \emph{Go}
+    ir pateicīgākas konstrukcijas priekš paralelizacijas (teorētiski runājot,
+    darba autors praktiski ar paraleilzācijām nav vēl strādājis šajās valodās).
 \end{itemize}
 
-Darba autors uzskata, ka mūsdienās eksitē labāki alternatīvi šāda projekta
+Darba autors uzskata, ka mūsdienās eksitē labāki alternatīvi \textbf{šāda} projekta
 izstrādei teju vai visos iespējamajos scenārijos. Tā arī būs visticamāk šī
-projekta nākotne -- mēgināt to implementēt ar citām valodām un rīkiem, lai veiktu
+projekta nākotne -- mēģināt to implementēt ar citām valodām un rīkiem, lai veiktu objektīvākus
 salīdzinājumus.
+
+Esošais projekts der tikai kā \emph{proof of concept}, ka kaut ko šādu var izstrādāt
+un tas \emph{strādās}, bet tas nav projekts, ar kuru varētu lepoties. Noteikti vēl
+nav gatavs publiskai pieejai.
