@@ -36,22 +36,22 @@ Simulācijas kods nodrošina sekojošās pamatdarbības:
     \item Entītiju savstarpēju mijiedarbību
 \end{itemize}
 
-Ideja ir reprezentēt katru entītiju kā ierobežotu punktu plaknē, aizliedzot entītijiem šķērsot
-plaknes robežas. Katram entītijam ir pieeja saviem iekšējajiem parametriem - virzienu
+Ideja ir reprezentēt katru entītiju kā ierobežotu punktu plaknē, aizliedzot entītijām šķērsot
+plaknes robežas. Katrām entītijām ir pieeja saviem iekšējajiem parametriem - virzienu
 uz kuru dodas (reprezentē ar vektoru), vecumu, veselības stāvokli. Simulācijas
-kods atļauj ērtā veidā definēt darbības ar entītijiem - infekcijas izplatīšanos,
+kods atļauj ērtā veidā definēt darbības ar entītijām - infekcijas izplatīšanos,
 atveseļošanos, noteiktu \emph{mērķu} (kodā saukti par \emph{attractors}) definēšanu
-plaknē -- entītijiem būs savas rutīnas, ceļojot starp šiem mērķiem; tas kalpo kā
-vienkāršs veids, lai simulētu veikalus/slimnīcas/skolas u.c. publiskas telpas
-kur entītiji dodas tikties. Tiek arī nodrošināta iespēja slimos entītijus
-ielikt karantīnā, līdz tie atveseļojas. Viena no darba autora iecienītākajām
-funkcijām ir \emph{zombie mode}, kas liek slimajiem entītijiem dzīties
-pakaļ veselajiem, līdz visa populācija saslimst (lai gan šis nebija no izvirzītajiem
+plaknē -- entītijām būs savas rutīnas, ceļojot starp šiem mērķiem; tas kalpo kā
+vienkāršs veids, lai simulētu veikalus/slimnīcas/skolas u.c. publiskas telpas,
+kur entītijas dodas tikties. Tiek arī nodrošināta iespēja slimās entītijas
+ielikt karantīnā, līdz tās atveseļojas. Viena no darba autora iecienītākajām
+funkcijām ir \emph{zombie mode}, kas liek slimajiem entītijām dzīties
+pakaļ veselajām, līdz visa populācija saslimst (lai gan šis nebija no izvirzītajiem
 mērķiem, to ir interesanti skatīties vizuālajā saskarnē).
 
 \subsubsection*{Lietotāja saskarnes koda vispārīgā būtība}
 
-Lietotāja saskarnes galvenā ideja ir parādīt entītijus kaut kādā plaknē, tos
+Lietotāja saskarnes galvenā ideja ir parādīt entītijas kaut kādā plaknē, tos
 iekrāsot uzskatāmā veidā, un nodrošināt dažādu simulācijas funkciju izslēgšanu
 un ieslēgšanu priekš simulācijas (piemēram \emph{karantīna}, \emph{zombie mode},
 \emph{slimības pārnēsāšanās}, utt.). Kā arī tiek nodrošināta papildus meta-datu

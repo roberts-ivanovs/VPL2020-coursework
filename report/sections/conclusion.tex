@@ -10,7 +10,7 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \item Darba autora primārā koda rakstīšanas vide is Visual Studio Code, kas
     nodrošina \emph{OmniSharp C\#} valodas serveri priekš \emph{C\#} koda intellisense,
     bet \emph{Razor} koda
-    failu apstrāde lika tam regulāri pēkšņi pārtraukt darbību. Diemžēl cita alternatīva
+    failu apstrāde lika tam regulāri pēkšņi pārtraukt darbību. Diemžēl citas alternatīvas
     nebija. Visos pārējos failos \emph{OmniSharp} strādāja ideāli, tomēr laikam tieši šim projektam
     \emph{(Blazor/Razor) OmniSharp} ir nepieciešama papildus uzmanība pilnīgam atbalstam.
 
@@ -22,8 +22,8 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     Piemēram, vienīgā \emph{Canvas JS wrapper} bibliotēkai -- \emph{BlazorExtensions.Canvas} --
     nestrādāja \emph{WebGL API} (varbūt tā ir darba autora paša vaina? Tomēr
     dokumentācijā nekas nebija padziļināti par to rakstīts). Mūsdienās citām programmēšanas valodām kā \emph{Rust}
-    ir daudz labāki risinājumi, piedāvājot \textbf{vairākas} alternatīvas \emph{OSS}
-    bibliotēkas priekš \emph{JS API}, padziļinātu dokentāciju visam,
+    ir daudz labāki risinājumi, piedāvājot vairākas alternatīvas \emph{OSS}
+    bibliotēkas priekš \emph{JS API},
     \emph{WebAssembly} atbalsts kompilatoram ir \emph{first class citizen}, iespēju
     ērti veikt \emph{client-side multithreaded} darbus. C\# ekosistēmai un it
     sevišķi \emph{Blazor} vēl ir kur tiekties.
@@ -31,11 +31,11 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \item Tā kā \emph{HTML canvas} ir
     \emph{JavaScript API}, tad katrs funkcijas izsaukums veic \emph{WebAssembly/JavaScript callback}
     funkciju padošanu ar vērtību klonēšanu -- jo vairāk šādas komunikācijas, jo
-    lielāks leiks overheads rodas. (Viens no faktoriem kāpēc \emph{canvas refresh rate} ir tik zems).
+    lielāks lieks \emph{overheads} rodas (Viens no iespējamajiem faktoriem kāpēc \emph{canvas refresh rate} ir tik zems).
 
     \item \emph{Canvas ,,2d"} nav pietiekami jaudīgs priekš daudzu elementu reālā laika
     zīmēšanas. \emph{WebGL} būtu bijis labāks risinājums. \emph{Canvas ,,2d"} API nespēj veikt
-    ātru, regulāru, liela apjoma datu attelu atjaunošanu bez vizuāliem artefaktiem.
+    ātru, regulāru, liela apjoma datu attēlu atjaunošanu bez vizuāliem artefaktiem.
 
     \item \emph{Multithreading} aplikācijā, kur ir tikai vizuāla \emph{WEB} saskarne, nav vajadzīgs.
     Šādu sistēmu darba autors nekad neieteiktu nevienam likt uz serveriem.
@@ -47,12 +47,12 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \emph{WebWorkers} būtu iespējama, lai veiktu sistēmas paralelizāciju ar vairākiem
     \emph{threadiem} -- bet šobrīd tas vēl nav iespējams.
 
-    \item Būtu vērtīgi izpētīt, vai visu atjaunošanās procesu varētu veikt ar
+    \item Būtu vērtīgi izpētīt, vai visu \emph{UI} atjaunošanās procesu varētu veikt ar
     \emph{requestAnimationFrame}\ref{web:req-anim-frame}. Jo pašreiz visa \emph{Canvas}
-    zīmēsana notiek uz galvenā \emph{UI threada}, šis varētu būt pirmais
-    optimizaciajs veids, bet tam ir nepieciešama papildus \emph{JavaScript} ,,līme".
+    zīmēšana notiek uz galvenā \emph{UI threada}, šis varētu būt pirmais
+    optimizācijas veids, bet tam ir nepieciešama papildus \emph{JavaScript} ,,līme".
 
-    \item Darba autoram \emph{pipeline} konstrukcija likās kā ļoti elegants risinājums
+    \item Darba autoram \emph{pipeline} konstrukcija likās ļoti elegants risinājums
     sistēmas modularitātes problēmai, it sevišķi izmantojot \emph{LINQ}, priekš īsāka un lasāmāka
     koda. Ja otrreiz būtu jātaisa šāda sistēma, tad šo koda dizaina elementu
     noteikti arī dublētu jaunajā sistēmā.
@@ -60,13 +60,16 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \item \emph{Mutex} konstrukcija ir obligāti nepieciešama, lai taisītu aplikāciju
     bez \emph{data-races}, tomēr \emph{C\#} valoda ir konstruēta bez papildus kompilācijas
     drošības nosacījumiem un \emph{Mutex} izmantošana ir ,,programmētāja labākajās
-    interesēs bet ne obligāta", kas var rast daudzas dažādas kļūdas, ja kāds mainīgais
+    interesēs, bet ne obligāta", kas var rast daudzas dažādas kļūdas, ja kāds mainīgais
     nav pareizi aizsargāts. Mūsdienās modernākām valodām kā \emph{Rust} un \emph{Go}
-    ir pateicīgākas konstrukcijas priekš paralelizacijas (teorētiski runājot,
-    darba autors praktiski ar paraleilzācijām nav vēl strādājis šajās valodās).
+    ir pateicīgākas konstrukcijas priekš paralelizācijas (tīri teorētiski runājot,
+    \emph{Rust} konstrukcija, kur \emph{Mutex<T>} ir \emph{generic} tips, ietverot
+    sevī aizsargājamo objektu, liekas daudz ērtāk lietojama, tomēr
+    darba autors praktiski ar paralelizācijām nav vēl strādājis šajās valodās un
+    pašreiz tā ir tiaki spekulācija).
 \end{itemize}
 
-Darba autors uzskata, ka mūsdienās eksitē labāki alternatīvi \textbf{šāda} projekta
+Darba autors uzskata, ka mūsdienās eksistē labāki alternatīvi šāda projekta
 izstrādei teju vai visos iespējamajos scenārijos. Tā arī būs visticamāk šī
 projekta nākotne -- mēģināt to implementēt ar citām valodām un rīkiem, lai veiktu objektīvākus
 salīdzinājumus.

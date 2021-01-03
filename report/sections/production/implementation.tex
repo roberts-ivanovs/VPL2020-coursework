@@ -11,12 +11,12 @@ Katrā reģionā atrodas kaut kāda noteiktu sākotnējo entītiju (gan veselo, 
 tie tiek ievietoti savā reģionā no to attiecīgajām \(x\) ass koordinātām.
 
 Katrs reģions tiek piešķirts noteiktai \emph{Task}\cite{csharp:task} instancei.
-Tajā brīdī, kad noteiktais entītijs šķērso \(x\) \emph{Region} \(x\)ass robežu, tad tas tiek tiek
-ievietots \emph{Out of bounds} buferī (kopīgs visām \emph{Region} instancēm), kuru
-regulāri apstrādā cita \emph{Task} instance - katrs entītijs šajā \emph{Out of bounds} buferī tiek
-izvērtēts pēc tā atrašanās vietas (pa \(x\) asi) un tiek novietos attiecīgā \emph{Region}
+Tajā brīdī, kad noteiktā entītija šķērso \emph{Region} \(x\)ass robežas, tad tā tiek
+ievietota \emph{Out of bounds} buferī (kopīgs visām \emph{Region} instancēm), kuru
+regulāri apstrādā cita \emph{Task} instance - katra entītija šajā \emph{Out of bounds} buferī tiek
+izvērtēta pēc tās atrašanās vietas (pa \(x\) asi) un tiek novietos attiecīgā \emph{Region}
 \emph{inbound} buferī, kuru brīvā brīdī noteiktā \emph{Region} pārvaldošais \emph{Task} pievienos
-simulējamajiem entītijiem. Šo entītiju kārtošanas kodu var apskatīt
+simulējamajām entītijām. Šo entītiju kārtošanas kodu var apskatīt
 \ref{app:out-of-bounds-sorting} pielikumā.
 
 
@@ -29,7 +29,7 @@ simulējamajiem entītijiem. Šo entītiju kārtošanas kodu var apskatīt
 
 Nepieciešamība izveidot \emph{inbound} buferi priekš \emph{Region} radās tādēļ, lai
 nerastos situācija,
-ka entītiju simulācijas brīdī (kur tiek veikta iterēšana pār entītijiem iekš \emph{Region}) pēkšņi
+ka entītiju simulācijas brīdī (kur tiek veikta iterēšana pār entītijām iekš \emph{Region}) pēkšņi
 rastos kaut kādas modifikācijas no cita \emph{thread} -- \emph{data races}.
 
 Izvēle dalīt visu simulācijas laukumu reģionos pa \(x\) asi (varēja būt arī \(y\)
@@ -38,8 +38,8 @@ kodolu skaitam, ko var ērti realizet, ja plakne tiek dalīta tikai pa vienu asi
 
 Darba autors \textbf{neizmanto visus pieejamos procesora kodolus priekš \emph{Region} pārvaldības}, jo šādā gadījumā
 procesors tiek pārslogots un tiek kavēta \emph{UI} atjaunošanās (par to
-vēlāk tiks aprakstīts) -- tāpēc tiek izmantota tikai \(\frac{2}{3}\) no
-pieejamajiem procesora kodoliem (vai sliktākajā gadījuma 1 kodols). Šī iemesla dēļ
+vēlāk tiks aprakstīts), tāpēc tiek izmantota tikai \(\frac{2}{3}\) no
+pieejamajiem procesora kodoliem (vai sliktākajā gadījumā 1 kodols). Šī iemesla dēļ
 \ref{img:multithreaded-layout} attēlā ir parādīti 5 reģioni/5 \emph{Tasks}/ \(\frac{2}{3}\) no 8 kodolu sistēmas.
 
 Lai gan, ņemot vērā, ka \(1 Task\neq 1 Thread\), jo \emph{Taski} izpildās uz \emph{.NET Runtime}
@@ -47,9 +47,10 @@ pieejama \emph{threadpoola}\cite{csharp:tasks-not-threads}, tad reāli definēt 
 \emph{Tasks} arī ir iespējams -- \emph{runtime} definētie \emph{threadi} (mēdz saukt arī par
 \emph{green threads}\cite{progr:green-threads}) izpildās
 sistēmas \emph{userspace}\cite{sys:userspace}, nevis sistēmas \emph{kerneļa} līmenī, kas \emph{.NET Runtime}
-atļauj pašam izlemt, kad darīt \emph{concurrent vai paralēlas}\cite{csharp:concurrent-parallel} darbības.
-\emph{Tasku} pārvaldība
-\emph{userspacā} ir daudz ātrāka nekā zemā līmeņa \emph{kerneļa threadu} veidošana.
+atļauj pašam izlemt, kad darīt \emph{vienlaicīgas vai paralēlas}\cite{csharp:concurrent-parallel} darbības.
+\emph{Tasku} pārvaldība iekš
+\emph{userspace} ar esošu \emph{threadpool} ir daudz ātrāka nekā zemā līmeņa \emph{kernel thread} veidošana
+katram izsaukumam.
 
 Visi \emph{Task} dalītie resursi tiek ,,aizsargāti" ar \emph{Mutex}\cite{csharp:mutex}
 instancēm, kas garantē to, ka informācija (aizsargātais mainīgais) netiks vienlaicīgi lasīts/rakstīts no
@@ -66,9 +67,9 @@ laikā. Darba autors izvēlējās funkciju kompozīcijas dizaina modeli --
 \emph{Pipelines}\cite{progr:pipelines}. Pirms tiek izveidota galvenā simulācijas
 instance \emph{World}(fails \emph{World.cs}), ir jāinicializē \emph{List} ar
 \emph{Pipeline} (fails \emph{BasePipeline.cs}, skat. \ref{app:IPipeline} pielikumā)
-interfeisa implementējošām instancēm. Interfeisa definīcija apskatāma sekojošajā kodā:
+interfeisa implementējošām instancēm.
 
-Objekts \emph{PipelineReturnData}, kuru atgriež \emph{pushThrough} funkcija ir
+Tips \emph{PipelineReturnData}, kuru atgriež \emph{pushThrough} funkcija \ref{app:IPipeline} pielikumā, ir
 uzskatāms par \emph{type alias} \emph{Tuple<T, K>} mainīgajam:
 
 {
@@ -78,29 +79,30 @@ uzskatāms par \emph{type alias} \emph{Tuple<T, K>} mainīgajam:
 \end{minted}
 }
 
-, jo \emph{C\#} nepiedāvā valodas konstrukcij, kas atļautu definēt
-\emph{type alias}. Šajā gadījumā tas tika darīts ar jaunas klases palīdzību, lai kods būtu lasāmāks.
+, jo \emph{C\#} nepiedāvā valodas konstrukciju, kas atļautu definēt
+\emph{type alias} priekš dažādām esošām koda struktūrām. Šajā gadījumā tas tika
+darīts ar jaunas klases palīdzību, lai kods būtu lasāmāks.
 
 Tālāk ir jāveido klases, kas implementē šo \emph{Pipeline} interfeisu -- katrai sistēmas
 nepieciešamajai darbībai jāveido sava klases ar interfeisa implementāciju. Kopā
 tika izveidoti 8 dažādi \emph{pipeline} objekti:
 
 \begin{enumerate}
-    \item \textbf{AttractorPipeline} -- definē rutīnas entītijiem, vietas uz kuriem visi kopīgi dosies.
+    \item \textbf{AttractorPipeline} -- definē rutīnas entītijām, vietas uz kuriem visas kopīgi dosies.
     \item \textbf{DeathPipeline} -- izņem entītiju no saraksta, ja tā dzīvības ir vienādas ar \(0\).
-    \item \textbf{GeoLocationPipeline} -- pārvieto entītiju kartē, aprēķinot tā jauno
-        atrašanās vietu, zinot entītija virzienu, ātrumu, esošo lokāciju un pagājušo
-        laiku kopš iepriekšējā \emph{pipeline} izsaukuma.
-    \item \textbf{InfectionPipeline} -- pārbauda kuri veselie entītiji ir blakus slimajam
-        entītijam un konvertē tos uz jauniem slimniekiem.
-    \item \textbf{QuarantinePipeline} -- visus slimos entītijus novieto noteikta plaknes
+    \item \textbf{GeoLocationPipeline} -- pārvieto entītiju kartē, aprēķinot tās jauno
+        atrašanās vietu, zinot entītijas virzienu, ātrumu, esošo lokāciju un pagājušo
+        laiku kopš iepriekšējās iterācijas.
+    \item \textbf{InfectionPipeline} -- pārbauda, kuras veselās entītijas ir blakus slimajam
+        entītijām un konvertē tos uz slimajām entītijām.
+    \item \textbf{QuarantinePipeline} -- visas slimās entītijas novieto noteiktā plaknes
         stūrī, lai izslimotu savu slimību.
-    \item \textbf{RecoveryPipeline} -- ja slimais entītijs ir atveseļojies, tad konvertē to uz veselo entītiju.
-    \item \textbf{TickingPipeline} -- iedarbina entītija ,,iekšējo" pulksteni (pārrēķina jaunu kustības virzienu, veselības stāvokli).
-    \item \textbf{ZombieModePipeline} -- liek visiem slimajiem entītijiem virzīties pretī vistuvākajam veselajam entītijam.
-    \item \textbf{AssertionPipeline} -- \emph{runtime} pārbaude vai visi entīiju tipi ir
+    \item \textbf{RecoveryPipeline} -- ja slimā entītija ir atveseļojies, tad konvertē to uz veselo entītiju.
+    \item \textbf{TickingPipeline} -- iedarbina entītijas ,,iekšējo" pulksteni (pārrēķina jaunu kustības virzienu, veselības stāvokli).
+    \item \textbf{ZombieModePipeline} -- liek visām slimajām entītijām virzīties pretī vistuvākajam veselajām entītijām.
+    \item \textbf{AssertionPipeline} -- \emph{runtime} pārbaude vai visas entīijas tipi ir
         pareizi sadalīti (iepriekš tika izmantota dinamisku datu tipu
-        kāstošana \emph{runtime} laikā, tāpēc šis pipeline bija
+        pārvēršana (\emph{type casting}) \emph{runtime} laikā, tāpēc šis \emph{pipeline} bija
         noderīgs priekš kļūdu izķeršanas, bet šobrīd tā darbības jēga ir zudusi).
 \end{enumerate}
 
@@ -132,7 +134,7 @@ lai varētu visu projektu novietot kā \emph{SPA}\cite{progr:SPA} uz statiskā f
 pašreizējā \emph{Blazor} versija nepiedāvā vairāku procesu paralelizācijas iespējas
 (tikai \emph{concurrent} iespējamību, izmantojot vienu \emph{threadu}, kas arī ir
 izmantots priekš pārlūkprogrammas \emph{UI} zīmēšanas)\cite{csharp:blazor-no-multithreaded-support}. Lai gan
-visi \emph{WEB} brosweri kopš 2020 gada vasaras atbalsta \emph{WebAssembly Threads}
+visi \emph{WEB} brosweri kopš 2020. gada vasaras atbalsta \emph{WebAssembly Threads}
 priekšlikumu \cite{wasm:threads-proposal}, tomēr to ir nepieciešams atsevišķi
 ,,ieslēgt" caur pārlūkprogrammas iestatījumiem. Otrs veids kā iegūt paralelizāciju \emph{WEB}
 lietojumprogrammas ir ar \emph{WebWorkers}, bet lai to paveiktu, ir nepieciešama
@@ -163,16 +165,16 @@ izmantots ,,2d" \emph{context API}.
 Inicializējot un uzstartējot simulāciju (skat. \ref{app:init-simulation} pielikumā), tā darbojas atsevišķā
 sistēmas \emph{threadā} no \emph{UI} saskarnes -- no lietotāju saskarnes puses nav
 viens konkrēts moments, kad
-varētu iegūt visas nepieciešamās vērtības par esošajiem entītijiem sistēmā. Risinājums
-ir izmantot tādu kā \emph{data polling}\cite{progr:data-polling} pieeju. pats Blazor koda \emph{polling}
+varētu iegūt visas nepieciešamās vērtības par esošajām entītijām sistēmā. Risinājums
+ir izmantot tādu kā \emph{data polling}\cite{progr:data-polling} pieeju. Paša \emph{Blazor} koda \emph{polling}
 pieeja ir apskatāma \ref{app:polling} pielikumā, bet simulācijas atbildi uz šo
-vaicājumu var apskatīt \ref{app:polling-world} pielikumā. Koda sekvences
+vaicājumu var apskatīt \ref{app:polling-world} pielikumā. Koda secību
 diagrammu priekš izveidotās \ref{app:polling-world} pielikuma metodes ir iespējams
 aplūkot \ref{img:squance-diagram-get-status}
-attēlā, bet pielikumā. Katrā
-datu pieprasījuma reizē ir nepieciešams nepauzēt (iekšējais mainīgais, kas raksturo esošo stāvokli) visas \emph{Region} instances,
-lai nenotiktu \emph{data races}, nepieciešams nepauzēt pašu \emph{World} instanci (lai
-\emph{OutOfBounds} sinhronizācija nenotiktos datu nolases brīdī), tad nepieciešams apkopot
+attēlā. Katrā
+datu pieprasījuma reizē ir nepieciešams nopauzēt (iekšējais mainīgais, kas raksturo esošo stāvokli) visas \emph{Region} instances,
+lai nenotiktu \emph{data races}, nepieciešams pauzēt pašu \emph{World} instanci (lai
+\emph{OutOfBounds} sinhronizācija \textbf{nenotiktu} datu nolases brīdī), tad nepieciešams apkopot
 datus no visām datu krātuvēm, atpauzēt visas instances, atgriezt datus lietotāju saskarnei.
 
 \begin{figure}[H]
@@ -185,4 +187,4 @@ datus no visām datu krātuvēm, atpauzēt visas instances, atgriezt datus lieto
 Tālāk šie iegūtie dati \emph{Blazor} pusē tiek papildus sadalīti: metadati tiek nodoti
 \emph{Statistics} komponentei, kas aprēķina katra \emph{Region} ātrdarbību, bet
 reāli dati par entītiju stāvokļiem tiek nodota \emph{Canvas} komponentei, kur
-entītiji tiek sašķiroti un katrs uzzīmēts uz \emph{HTML canvas} ar \emph{BlazorExtensions.Canvas} bibliotēkas palīdzību.
+entītijas tiek sašķirotas un katra uzzīmēta uz \emph{HTML canvas} ar \emph{BlazorExtensions.Canvas} bibliotēkas palīdzību.

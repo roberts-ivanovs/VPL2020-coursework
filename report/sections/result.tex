@@ -28,7 +28,7 @@ kur ir iespējams veikt sekojošās darbības:
     \item slimo entītiju skaita maiņu,
     \item datu pieprasīšanas intervāla (\emph{polling rate}) maiņu,
     \item iespēja piespiedu kārtā izmantot tikai vienu \emph{Region} instanci
-    \item Uzsākt/apstādināt simulāciju
+    \item uzsākt/apstādināt simulāciju.
 \end{itemize}
 
 
@@ -77,15 +77,15 @@ Slimo entītiju krāsa mainās atkarībā no viņu veselības stāvokļa -- jo g
 Tā kā \emph{canvas} vizualizācija der tikai kā uzskates materiāls, tad \emph{Statistics}
 sadaļa atļauj apskatīt to, kas notiek sistēmā skaitliskā veidā (skat. \ref{img:statistics} att.).
 Šī sadaļa ir sadalīta 3 kolonnās -- entītiju vispārīgā statistika, katra reģiona
-noslodze (tiek mērīta ar iterācijām sekundē, kur 1 iterācija ir:
+noslodze, kas tiek mērīta ar iterācijām sekundē, kur 1 iterācija ir:
 
 \begin{itemize}
     \item visu reģiona entītiju izlaišana caur \emph{pipeline},
     \item \emph{inbound} bufera pārbaude,
-    \item entītiju ievietošana \emph{out of bounds} buferī
+    \item entītiju ievietošana \emph{out of bounds} buferī.
 \end{itemize}
 
-, bet 3. kolonna šajā komponentē ir vidējais aritmētiskais visu reģionu
+3. kolonna šajā komponentē ir vidējais aritmētiskais visu reģionu
 noslodzei kopš simulācijas sākuma. Šie skaitļi atļauj ērti analizēt sistēmas
 izmaiņas pie dažādiem iestatījumiem.
 
@@ -102,7 +102,7 @@ izmaiņas pie dažādiem iestatījumiem.
 Izmantojot šo informāciju, kas apskatāma \emph{Statistics} komponentē, var veikt
 nelielus testus esošajai programmai. Sākotnējais entītiju skaits tika uzlikts uz
 maksimālo, lai pēc iespējas vairāk noslogotu procesoru, tad tika palaista programma
-uz \~ 20 sekundēm, tikai ievākta informācija no sistēmas. Šāda procedūra tika
+apmēram 20 sekundēm, tikai ievākta informācija no sistēmas. Šāda procedūra tika
 atkārtota, izmantojot 1 \emph{Region} un 5 \emph{Region} instances. Rezultātus
 ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
 
@@ -120,7 +120,7 @@ ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
 \end{figure}
 
 Informāciju, ko attēlo šī komponente ir jāvērtē tikai kā ,,ieskats". Katru
-reizi ģenerējot jaunu simulāciju, entītiji tiek uzģenerēti citās vietās, ar
+reizi ģenerējot jaunu simulāciju, entītijas tiek uzģenerētas citās vietās, ar
 dažādiem parametriem, sistēmas \emph{atraktori} tiek definēti dažādos daudzumos
 un dažādās vietās.
 Protams, to visu ir iespējams statiski iekodēt kodā, lai tas nemainās, tad veiktu
