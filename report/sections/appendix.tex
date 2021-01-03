@@ -152,7 +152,10 @@ Fails \texttt{World.cs}
         // Place each item in its appropriate thread
         for (int i = 0; i < regionManagers.Length; ++i)
         {
-            if ((inboundSick[i].Count() > 0 || inboundHealthy[i].Count() > 0) && regionManagers[i].inboundAccess.WaitOne())
+            if (
+                (inboundSick[i].Count() > 0 || inboundHealthy[i].Count() > 0)
+                && regionManagers[i].inboundAccess.WaitOne()
+            )
             {
                 regionManagers[i].inboundSick.AddRange(inboundSick[i]);
                 regionManagers[i].inboundHealthy.AddRange(inboundHealthy[i]);
