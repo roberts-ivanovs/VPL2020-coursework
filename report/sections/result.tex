@@ -1,8 +1,8 @@
 
 % 2 sadaļas, footeris, main content
 
-Izstrādāto galaprojektu ir iespējams uzstartēt ar \emph{shell} skrptu projekta
-pamatdirektorijā \texttt{./start.sh}.
+Izstrādāto projektu ir iespējams uzstartēt ar \emph{shell} skriptu projekta
+pamatdirektorijā -- \texttt{./start.sh}.
 Projektu uzstartējot, apmeklējot ar interneta pārlūkprogrammu saiti
 \url{https://127.0.0.1:5001/}, atvērsies lapa, kāda attēlota \ref{img:whole-ui} attēlā.
 
@@ -19,16 +19,25 @@ att.) un ,,About" sadaļas (nav attēlots atskaitē).
 % Settings panelis
 \subsection{Iestatījumu panelis}
 
-,,Settings" panelis ir galvenā vieta saskarnē, kur ir iespējams veikt sekojošās darbības:
+,,Settings" panelis (skat. \ref{img:settings} att.) ir galvenā vieta saskarnē,
+kur ir iespējams veikt sekojošās darbības:
 
 \begin{itemize}
     \item \emph{Pipeline} ieslēgšanu/izslēgšanu,
     \item populācijas skaita maiņu,
     \item slimo entītiju skaita maiņu,
     \item datu pieprasīšanas intervāla (\emph{polling rate}) maiņu,
-    \item iespēja piespiedus kārtā izmantot tikai vienu \emph{Region} instanci
+    \item iespēja piespiedu kārtā izmantot tikai vienu \emph{Region} instanci
     \item Uzsākt/apstādināt simulāciju
 \end{itemize}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.4]{images/settings.png}
+	\caption{Iestatījumu panelis}
+	\label{img:settings}
+\end{figure}
 
 % Canvas
 \subsection{Kartes komponente}
@@ -37,9 +46,9 @@ att.) un ,,About" sadaļas (nav attēlots atskaitē).
 simulācijas plaknes izmēri nesakrīt ar pikseļu dimensijām lietotāju saskarnes
 \emph{canvas} elementa izmēriem, tad katrs punkts arī tiek normalizēts jaunajās
 (lietotājam redzamajās) dimensijās. Zināmas problēmas gan rodas gadījumos, kur
-ir liels entītiju skaits -- \emph{canvas 2d context} nespēj pietiekami ātri
+ir liels entītiju skaits -- \emph{JS Canvas 2d context API} nespēj pietiekami ātri
 uzzīmēt lielo elementu skaitu, rodas vizuāli artefakti. \emph{Canvas} elementus
-ar dažādiem simulāciajs stāvokļiem dažādās stadijās var apskatīt \ref{img:canvas-show-off} attēlā.
+ar dažādiem simulācijas stāvokļiem dažādās stadijās var apskatīt \ref{img:canvas-show-off} attēlā.
 Slimo entītiju krāsa mainās atkarībā no viņu veselības stāvokļa -- jo gaišāks, jo sliktāka veselība.
 
 \begin{figure}[H]%
@@ -58,19 +67,25 @@ Slimo entītiju krāsa mainās atkarībā no viņu veselības stāvokļa -- jo g
     \subfloat
     [\centering Ilgtermiņā turot ieslēgtu \emph{Zombie mode}, var redzet \emph{Region} sadalījumu]
         {{\includegraphics[width=.5\linewidth]{images/zombiemode-2.png} }}%
-    \caption{Dažādu simulāciajs stāvokļu viuzalizācija}%
+    \caption{Dažādu simulācijas stāvokļu vizualizācija}%
     \label{img:canvas-show-off}%
 \end{figure}
 
 % Statistics
 \subsection{Statistikas komponente}
 
-Tā kā \emph{canvas} vizualizācija der tikai kā uzskates materiāls, \emph{Statistics}
-sadļa atļauj apskatīt to, kas notiek sistēmā ,,caur skaitļiem" (skat. \ref{img:statistics} att.).
+Tā kā \emph{canvas} vizualizācija der tikai kā uzskates materiāls, tad \emph{Statistics}
+sadaļa atļauj apskatīt to, kas notiek sistēmā skaitliskā veidā (skat. \ref{img:statistics} att.).
 Šī sadaļa ir sadalīta 3 kolonnās -- entītiju vispārīgā statistika, katra reģiona
-noslodze (tiek mērīta ar iterācijām sekundē, kur 1 iterācija ir visu reģiona entītiju
-izlaišana caur \emph{pipeline}, \emph{inbound} bufera pārbaude, entītiju ievietošana
-\emph{out of bounds} buferī), bet 3. kolonna ir vidējāis aritmētiskais visu reģionu
+noslodze (tiek mērīta ar iterācijām sekundē, kur 1 iterācija ir:
+
+\beign{itemize}
+    \item visu reģiona entītiju izlaišana caur \emph{pipeline},
+    \item \emph{inbound} bufera pārbaude,
+    \item entītiju ievietošana \emph{out of bounds} buferī
+\end{itemize}
+
+, bet 3. kolonna šajā komponentē ir vidējais aritmētiskais visu reģionu
 noslodzei kopš simulācijas sākuma. Šie skaitļi atļauj ērti analizēt sistēmas
 izmaiņas pie dažādiem iestatījumiem.
 
@@ -81,15 +96,15 @@ izmaiņas pie dažādiem iestatījumiem.
 	\label{img:statistics}
 \end{figure}
 
-\subsection{Vairāku-kodolu stresa tests}
 % Max entities, no deaths, no nothing 1REGION vs 5 REGIONS
+\subsection{Vairāku-kodolu stresa tests}
+
 Izmantojot šo informāciju, kas apskatāma \emph{Statistics} komponentē, var veikt
 nelielus testus esošajai programmai. Sākotnējais entītiju skaits tika uzlikts uz
 maksimālo, lai pēc iespējas vairāk noslogotu procesoru, tad tika palaista programma
-uz \~ 20 sekundēm, tikai ievākta informācija no sistemas. Šāda procedūra tika
+uz \~ 20 sekundēm, tikai ievākta informācija no sistēmas. Šāda procedūra tika
 atkārtota, izmantojot 1 \emph{Region} un 5 \emph{Region} instances. Rezultātus
 ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
-
 
 \begin{figure}[H]%
     \centering
@@ -104,9 +119,11 @@ ir iespējams apskatīt \ref{img:test-single-vs-mutlicore} attēlā.
     \label{img:test-single-vs-mutlicore}%
 \end{figure}
 
-Uz šo informāciju, ko attēlo šī komponente ir jāvērtē tikai kā ,,ieskats". Katru
-reizi ģenerējot jaunu simulāciju, entītiji tiek uzģenerētei citās vietās, ar
-dažādiem parametriem, atraktori tiek definēti dažādos daudzumos un dažādās vietās.
-Protams, to visu ir iespējams statiski iekodēt kodā, lai tas nemainās, tomēr,
-izstradājot sistēmu, mērķis nebija veikt padziļinātu analīzi par paralelizācijas
-uzlabojumiem veiktspējā (ironiski, bet tiešī šī apakšadaļa to arī dara).
+Informāciju, ko attēlo šī komponente ir jāvērtē tikai kā ,,ieskats". Katru
+reizi ģenerējot jaunu simulāciju, entītiji tiek uzģenerēti citās vietās, ar
+dažādiem parametriem, sistēmas \emph{atraktori} tiek definēti dažādos daudzumos
+un dažādās vietās.
+Protams, to visu ir iespējams statiski iekodēt kodā, lai tas nemainās, tad veiktu
+testus, tomēr,
+izstrādājot sistēmu, mērķis nebija veikt padziļinātu analīzi par paralelizācijas
+uzlabojumiem.
