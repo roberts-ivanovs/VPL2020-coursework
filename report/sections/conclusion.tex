@@ -48,7 +48,7 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \emph{threadiem} -- bet šobrīd tas vēl nav iespējams.
 
     \item Būtu vērtīgi izpētīt, vai visu \emph{UI} atjaunošanās procesu varētu veikt ar
-    \emph{requestAnimationFrame}\ref{web:req-anim-frame}. Jo pašreiz visa \emph{Canvas}
+    \emph{requestAnimationFrame}\cite{web:req-anim-frame}. Jo pašreiz visa \emph{Canvas}
     zīmēšana notiek uz galvenā \emph{UI threada}, šis varētu būt pirmais
     optimizācijas veids, bet tam ir nepieciešama papildus \emph{JavaScript} ,,līme".
 
@@ -66,14 +66,16 @@ var veikt, gan par pašu projektu, gan \emph{C\#} kā valodu un \emph{.NET ekosi
     \emph{Rust} konstrukcija, kur \emph{Mutex<T>} ir \emph{generic} tips, ietverot
     sevī aizsargājamo objektu, liekas daudz ērtāk lietojama, tomēr
     darba autors praktiski ar paralelizācijām nav vēl strādājis šajās valodās un
-    pašreiz tā ir tiaki spekulācija).
+    pašreiz tā ir tikai spekulācija).
 \end{itemize}
 
 Darba autors uzskata, ka mūsdienās eksistē labāki alternatīvi šāda projekta
-izstrādei teju vai visos iespējamajos scenārijos. Tā arī būs visticamāk šī
+izstrādei teju vai visos iespējamajos scenārijos -- lietotāju saskarnei \emph{TypeScript}
+ar \emph{React}, bet, ja vēlme ir izmantot \emph{WebAssembly}, tad Rust piedāvā (pēc paša autora pieredzes
+ar to strādājot) plašākas bibliotēkas ar labāku dokumentāciju un piemēriem. Tā arī būs visticamāk šī
 projekta nākotne -- mēģināt to implementēt ar citām valodām un rīkiem, lai veiktu objektīvākus
 salīdzinājumus.
 
 Esošais projekts der tikai kā \emph{proof of concept}, ka kaut ko šādu var izstrādāt
-un tas \emph{strādās}, bet tas nav projekts, ar kuru varētu lepoties. Noteikti vēl
-nav gatavs publiskai pieejai.
+un tas \emph{strādās}, bet tas nav projekts, kuru varētu novietot uz produkcijas
+serveriem publiskai piekļuvei.
